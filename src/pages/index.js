@@ -1,10 +1,15 @@
 import * as React from 'react'
+import { Helmet } from 'react-helmet'
+import Header from '../components/header'
 
 const IndexPage = () => {
   return (
     <main>
-      <title>Home Page</title>
-      <h1 className=''>Hello alioukahere!</h1>
+      <Helmet>
+        <title>Mamadou Aliou Diallo - Full Stack Web Developer</title>
+      </Helmet>
+
+      <Header />
     </main>
   )
 }
