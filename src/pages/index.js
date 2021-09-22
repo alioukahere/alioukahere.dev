@@ -5,6 +5,7 @@ import Header from '../components/header'
 import Project from '../components/projectCard'
 import Tutorial from '../components/tutorialCard'
 import imageOfMe from '../images/me.png'
+import logo from '../images/icon.png'
 
 const IndexPage = () => {
   return (
@@ -13,7 +14,7 @@ const IndexPage = () => {
         <title>Mamadou Aliou Diallo - Full Stack Web Developer</title>
       </Helmet>
 
-      <Header />
+      {/* <Header /> */}
 
       <div className='container px-4 mx-auto flex flex-col-reverse py-24 lg:items-center lg:flex-row'>
         <div className='mt-6 lg:w-2/3'>
@@ -139,6 +140,41 @@ const IndexPage = () => {
           </div>
           <div className='md:w-1/2 lg:w-1/3 p-3'>
             <Project />
+          </div>
+        </div>
+      </div>
+
+      <div className='container px-4 mx-auto py-8'>
+        <div className='flex justify-between items-center'>
+          <h2 className='text-2xl font-bold'>Signup to my Newsletter!</h2>
+        </div>
+        <div className='mt-6 flex flex-col-reverse md:flex-row md:items-center'>
+          <div className='mt-5 md:w-1/2'>
+            <p className='text-gray-800 lg:w-4/5'>
+              Lorem ipsum dolor sit amet consectetur adipisicing elit.
+              Recusandae id, obcaecati excepturi voluptatem dolore corporis
+              beatae autem voluptates quam explicabo blanditiis exercitationem
+              illum nostrum ipsa voluptas eligendi ratione molestiae placeat.
+            </p>
+            <p className='mt-4'>
+              <input
+                type='text'
+                placeholder='Email Address'
+                className='p-2 outline-none text-sm md:text-base'
+              />
+              <input
+                type='submit'
+                value='Subscribe'
+                className='p-2 bg-blue-700 text-sm text-gray-100 font-bold rounded-tr-xl rounded-br-xl md:text-base'
+              />
+            </p>
+          </div>
+          <div className='md:w-1/2'>
+            <img
+              src={logo}
+              alt='Mamadou Aliou Diallo'
+              className='w-28 mx-auto'
+            />
           </div>
         </div>
       </div>
