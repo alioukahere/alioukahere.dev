@@ -2,6 +2,7 @@ import * as React from 'react'
 import { Helmet } from 'react-helmet'
 
 import Header from '../components/header'
+import Footer from '../components/footer'
 import Project from '../components/projectCard'
 import Tutorial from '../components/tutorialCard'
 import imageOfMe from '../images/me.png'
@@ -14,7 +15,7 @@ const IndexPage = () => {
         <title>Mamadou Aliou Diallo - Full Stack Web Developer</title>
       </Helmet>
 
-      {/* <Header /> */}
+      <Header />
 
       <div className='container px-4 mx-auto flex flex-col-reverse py-24 lg:items-center lg:flex-row'>
         <div className='mt-6 lg:w-2/3'>
@@ -160,12 +161,12 @@ const IndexPage = () => {
               <input
                 type='text'
                 placeholder='Email Address'
-                className='p-2 outline-none text-sm md:text-base'
+                className='p-2 outline-none text-sm md:text-base lg:text-lg'
               />
               <input
                 type='submit'
                 value='Subscribe'
-                className='p-2 bg-blue-700 text-sm text-gray-100 font-bold rounded-tr-xl rounded-br-xl md:text-base'
+                className='p-2 bg-blue-700 text-sm text-gray-100 font-bold rounded-tr-xl rounded-br-xl md:text-base lg:text-lg'
               />
             </p>
           </div>
@@ -178,6 +179,8 @@ const IndexPage = () => {
           </div>
         </div>
       </div>
+
+      <Footer />
     </main>
   )
 }

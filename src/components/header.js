@@ -12,16 +12,6 @@ export default function Header() {
             Blog
           </a>
         </li>
-        <li>
-          <a href='#' className='hover:text-blue-700'>
-            Projects
-          </a>
-        </li>
-        <li>
-          <a href='#' className='hover:text-blue-700'>
-            Contact
-          </a>
-        </li>
       </ul>
     </header>
   )
