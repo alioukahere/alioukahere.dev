@@ -8,4 +8,5 @@
 
 body {
   font-family: 'Nunito', sans-serif;
+  @apply bg-gray-100;
 }

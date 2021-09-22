@@ -2,6 +2,7 @@ import * as React from 'react'
 import { Helmet } from 'react-helmet'
 
 import Header from '../components/header'
+import Tutorial from '../components/tutorialCard'
 import imageOfMe from '../images/me.png'
 
 const IndexPage = () => {
@@ -55,6 +56,72 @@ const IndexPage = () => {
             alt='Mamadou Aliou Diallo'
             className='w-56 mx-auto rounded-full lg:w-64'
           />
+        </div>
+      </div>
+
+      <div className='container px-4 mx-auto xl:flex'>
+        <div className='xl:w-2/3'>
+          <div className='flex justify-between items-center'>
+            <h2 className='text-2xl font-bold'>Latest Tutorials</h2>
+            <a href='' className='text-blue-700 underline text-sm'>
+              View blog &#8594;
+            </a>
+          </div>
+          <div className='-mx-3 flex flex-wrap mt-6'>
+            <div className='md:w-1/2 lg:w-1/3 p-3'>
+              <Tutorial />
+            </div>
+            <div className='md:w-1/2 lg:w-1/3 p-3'>
+              <Tutorial />
+            </div>
+            <div className='md:w-1/2 lg:w-1/3 p-3'>
+              <Tutorial />
+            </div>
+            <div className='md:w-1/2 lg:w-1/3 p-3'>
+              <Tutorial />
+            </div>
+            <div className='md:w-1/2 lg:w-1/3 p-3'>
+              <Tutorial />
+            </div>
+            <div className='md:w-1/2 lg:w-1/3 p-3'>
+              <Tutorial />
+            </div>
+          </div>
+        </div>
+        <div className='mt-6 xl:mt-0 xl:w-1/3 xl:ml-8'>
+          <h2 className='text-2xl font-bold mb-6'>Topics</h2>
+          <div className='flex flex-wrap space-x-2'>
+            <a
+              href=''
+              className='bg-blue-200 py-1 px-3 text-sm font-semibold rounded-lg hover:bg-blue-700 hover:text-gray-50 my-1'
+            >
+              Symfony
+            </a>
+            <a
+              href=''
+              className='bg-blue-200 py-1 px-3 text-sm font-semibold rounded-lg hover:bg-blue-700 hover:text-gray-50 my-1'
+            >
+              PHP
+            </a>
+            <a
+              href=''
+              className='bg-blue-200 py-1 px-3 text-sm font-semibold rounded-lg hover:bg-blue-700 hover:text-gray-50 my-1'
+            >
+              Laravel
+            </a>
+            <a
+              href=''
+              className='bg-blue-200 py-1 px-3 text-sm font-semibold rounded-lg hover:bg-blue-700 hover:text-gray-50 my-1'
+            >
+              Flask
+            </a>
+            <a
+              href=''
+              className='bg-blue-200 py-1 px-3 text-sm font-semibold rounded-lg hover:bg-blue-700 hover:text-gray-50 my-1'
+            >
+              React
+            </a>
+          </div>
         </div>
       </div>
     </main>

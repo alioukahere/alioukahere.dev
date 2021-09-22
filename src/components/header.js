@@ -2,7 +2,7 @@ import React from 'react'
 
 export default function Header() {
   return (
-    <header className='container mx-auto py-10 flex justify-between items-center'>
+    <header className='container px-4 mx-auto py-10 flex justify-between items-center'>
       <a href='#' className='text-2xl font-bold'>
         alioukahere.dev
       </a>
