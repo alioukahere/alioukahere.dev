@@ -2,6 +2,7 @@ import * as React from 'react'
 import { Helmet } from 'react-helmet'
 
 import Header from '../components/header'
+import Project from '../components/projectCard'
 import Tutorial from '../components/tutorialCard'
 import imageOfMe from '../images/me.png'
 
@@ -59,7 +60,7 @@ const IndexPage = () => {
         </div>
       </div>
 
-      <div className='container px-4 mx-auto xl:flex'>
+      <div className='container px-4 mx-auto py-8 xl:flex'>
         <div className='xl:w-2/3'>
           <div className='flex justify-between items-center'>
             <h2 className='text-2xl font-bold'>Latest Tutorials</h2>
@@ -121,6 +122,23 @@ const IndexPage = () => {
             >
               React
             </a>
+          </div>
+        </div>
+      </div>
+
+      <div className='container px-4 mx-auto py-8'>
+        <div className='flex justify-between items-center'>
+          <h2 className='text-2xl font-bold'>Projects I've worked on</h2>
+        </div>
+        <div className='-mx-3 flex flex-wrap mt-6'>
+          <div className='md:w-1/2 lg:w-1/3 p-3'>
+            <Project />
+          </div>
+          <div className='md:w-1/2 lg:w-1/3 p-3'>
+            <Project />
+          </div>
+          <div className='md:w-1/2 lg:w-1/3 p-3'>
+            <Project />
           </div>
         </div>
       </div>
