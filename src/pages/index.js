@@ -62,7 +62,7 @@ const IndexPage = () => {
         </div>
       </div>
 
-      <div className='container px-4 mx-auto py-8 xl:flex'>
+      <div className='container px-4 mx-auto py-12 xl:flex'>
         <div className='xl:w-2/3'>
           <div className='flex justify-between items-center'>
             <h2 className='text-2xl font-bold'>Latest Tutorials</h2>
@@ -128,7 +128,7 @@ const IndexPage = () => {
         </div>
       </div>
 
-      <div className='container px-4 mx-auto py-8'>
+      <div className='container px-4 mx-auto py-12'>
         <div className='flex justify-between items-center'>
           <h2 className='text-2xl font-bold'>Projects I've worked on</h2>
         </div>
@@ -145,7 +145,7 @@ const IndexPage = () => {
         </div>
       </div>
 
-      <div className='container px-4 mx-auto py-8'>
+      <div className='container px-4 mx-auto py-12'>
         <div className='flex justify-between items-center'>
           <h2 className='text-2xl font-bold'>Signup to my Newsletter!</h2>
         </div>
