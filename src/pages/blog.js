@@ -1,9 +1,9 @@
 import * as React from 'react'
 import { Helmet } from 'react-helmet'
 
-import Header from '../components/header'
-import Footer from '../components/footer'
-import Tutorial from '../components/tutorialCard'
+import Header from '../components/Header'
+import Footer from '../components/Footer'
+import Tutorial from '../components/TutorialCard'
 import logo from '../images/icon.png'
 
 const BlogPage = () => {

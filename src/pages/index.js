@@ -1,13 +1,20 @@
 import * as React from 'react'
 import { Helmet } from 'react-helmet'
+import { Link } from 'gatsby'
 
-import Header from '../components/header'
-import Footer from '../components/footer'
-import Project from '../components/projectCard'
-import Tutorial from '../components/tutorialCard'
+import Header from '../components/Header'
+import Footer from '../components/Footer'
+import Project from '../components/ProjectCard'
+import Tutorial from '../components/TutorialCard'
 import imageOfMe from '../images/me.png'
 import logo from '../images/icon.png'
-import { Link } from 'gatsby'
+import symfonyIcon from '../images/symfony.svg'
+import laravelIcon from '../images/laravel.svg'
+import reactIcon from '../images/react.svg'
+import angularIcon from '../images/angular.svg'
+import djangoIcon from '../images/django.svg'
+import flaskIcon from '../images/flask.svg'
+import TechnologyCard from '../components/TechnologyCard'
 
 const IndexPage = () => {
   return (
@@ -95,11 +102,11 @@ const IndexPage = () => {
       <div className='bg-white'>
         <div className='container px-4 mx-auto py-20'>
           <h2 className='text-2xl font-bold'>How I Can Help</h2>
-          <p className='mt-3 text-gray-500 font-semibold'>
-            I can work with you to help you build a web application from
-            scratch.
+          <p className='mt-1 text-gray-500 font-semibold'>
+            I can work with you to help you build your web projects from scratch
+            or come in as a consultant.
           </p>
-          <div className='mt-6 md:flex md:space-x-6 lg:space-x-10 xl:space-x-14'>
+          <div className='mt-7 md:flex md:space-x-6 lg:space-x-10 xl:space-x-14'>
             <div className='w-full md:w-1/3'>
               <h3 className='font-bold text-xl'>1. Backend/APIs</h3>
               <p className='mt-2 font-semibold text-gray-500'>
@@ -147,22 +154,58 @@ const IndexPage = () => {
       <div className='bg-white'>
         <div className='container px-4 mx-auto py-20'>
           <h2 className='text-2xl font-bold'>Technologies I Work With</h2>
-          <p className='mt-3 text-gray-500 font-semibold'>
-            I work with latest, modern, powerful and secure technologies.
+          <p className='mt-1 text-gray-500 font-semibold'>
+            I work with modern, powerful and secure technologies to bring you
+            the best software.
           </p>
-          <div className='mt-6 md:flex md:space-x-6 lg:space-x-10 xl:space-x-14'>
+          <div className='md:flex md:flex-wrap -mx-4 lg:-mx-7 xl:-mx-10'>
             <div className='w-full md:w-1/3'>
-              <img
-                src='https://cdn.worldvectorlogo.com/logos/symfony.svg'
-                alt=''
-                className='w-16'
+              <TechnologyCard
+                imgSrc={symfonyIcon}
+                title='Symfony'
+                content='Symfony is one of the best and most popular PHP framework. It is my go to framework for Backend/APIs development.'
               />
-              <h3 className='font-bold text-xl mt-2'>Symfony</h3>
-              <p className='mt-2 font-semibold text-gray-500'>
-                I build robust, scalable and maintainable REST APIs for your web
+            </div>
+            <div className='w-full md:w-1/3'>
+              <TechnologyCard
+                imgSrc={laravelIcon}
+                title='Laravel'
+                content='I build robust, scalable and maintainable REST APIs for your web
                 or mobile applications using modern technologies and industry
-                requirements.
-              </p>
+                requirements.'
+              />
+            </div>
+            <div className='w-full md:w-1/3'>
+              <TechnologyCard
+                imgSrc={reactIcon}
+                title='React'
+                content='React is Javascript library to build dynamic and elegant web applications from Facebook. It is my go to library for building web interfaces.'
+              />
+            </div>
+            <div className='w-full md:w-1/3'>
+              <TechnologyCard
+                imgSrc={angularIcon}
+                title='Angular'
+                content='Angular is a Javascript framework '
+              />
+            </div>
+            <div className='w-full md:w-1/3'>
+              <TechnologyCard
+                imgSrc={djangoIcon}
+                title='Django'
+                content='I build robust, scalable and maintainable REST APIs for your web
+                or mobile applications using modern technologies and industry
+                requirements.'
+              />
+            </div>
+            <div className='w-full md:w-1/3'>
+              <TechnologyCard
+                imgSrc={flaskIcon}
+                title='Flask'
+                content='I build robust, scalable and maintainable REST APIs for your web
+                or mobile applications using modern technologies and industry
+                requirements.'
+              />
             </div>
           </div>
         </div>
