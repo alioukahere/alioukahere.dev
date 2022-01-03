@@ -14,6 +14,9 @@ import reactIcon from '../images/react.svg'
 import angularIcon from '../images/angular.svg'
 import djangoIcon from '../images/django.svg'
 import flaskIcon from '../images/flask.svg'
+import github from '../images/github.svg'
+import linkedin from '../images/linkedin.svg'
+import twitter from '../images/twitter.svg'
 import TechnologyCard from '../components/TechnologyCard'
 
 const IndexPage = () => {
@@ -41,27 +44,51 @@ const IndexPage = () => {
               <p className='mt-4 font-semibold text-gray-400 leading-relaxed md:text-lg md:leading-8'>
                 Welcome! It's great to have you here. I build responsive and
                 robust web applications using{' '}
-                <a href='' className='font-bold underline'>
+                <a
+                  href='https://symfony.com'
+                  target='_blank'
+                  className='font-bold underline'
+                >
                   Symfony
                 </a>
                 ,{' '}
-                <a href='' className='font-bold underline'>
+                <a
+                  href='https://laravel.com'
+                  target='_blank'
+                  className='font-bold underline'
+                >
                   Laravel
                 </a>
                 ,{' '}
-                <a href='' className='font-bold underline'>
+                <a
+                  href='https://reactjs.org'
+                  target='_blank'
+                  className='font-bold underline'
+                >
                   React
                 </a>
                 ,{' '}
-                <a href='' className='font-bold underline'>
+                <a
+                  href='https://angular.io'
+                  target='_blank'
+                  className='font-bold underline'
+                >
                   Angular
                 </a>
                 ,{' '}
-                <a href='' className='font-bold underline'>
+                <a
+                  href='https://www.djangoproject.com'
+                  target='_blank'
+                  className='font-bold underline'
+                >
                   Django
                 </a>{' '}
                 and{' '}
-                <a href='' className='font-bold underline'>
+                <a
+                  href='https://flask.palletsprojects.com/en/2.0.x'
+                  target='_blank'
+                  className='font-bold underline'
+                >
                   Flask
                 </a>
                 . I'm available for freelance projects, feel free to ping me at{' '}
@@ -111,8 +138,8 @@ const IndexPage = () => {
               <h3 className='font-bold text-xl'>1. Backend/APIs</h3>
               <p className='mt-2 font-semibold text-gray-500'>
                 I build robust, scalable and maintainable REST APIs for your web
-                or mobile applications using modern technologies and industry
-                requirements.
+                or mobile applications using modern technologies following best
+                practices.
               </p>
             </div>
             <div className='w-full md:w-1/3 mt-8 md:mt-0'>
@@ -120,7 +147,7 @@ const IndexPage = () => {
               <p className='mt-2 font-semibold text-gray-500'>
                 I build responsive and elegant web applications using modern and
                 popular technologies. UX is as more important as UI, so I make
-                sure your users feels home.
+                sure your web application is accessible.
               </p>
             </div>
             <div className='w-full md:w-1/3 mt-8 md:mt-0'>
@@ -140,13 +167,19 @@ const IndexPage = () => {
         </div>
         <div className='-mx-3 flex flex-wrap mt-6'>
           <div className='md:w-1/2 lg:w-1/3 p-3'>
-            <Project />
+            <Project
+              name='Kaherecode'
+              description={`Kaherecode is an aspiring community for developers. A platform to learn and share about programming.`}
+              projectUrl='https://kaherecode.com'
+              sourceCodeUrl='https://github.com/kaherecode/kaherecode'
+            />
           </div>
           <div className='md:w-1/2 lg:w-1/3 p-3'>
-            <Project />
-          </div>
-          <div className='md:w-1/2 lg:w-1/3 p-3'>
-            <Project />
+            <Project
+              name='IMS'
+              description={`IMS is a marketplace for real estate and ads I built for a customer.`}
+              projectUrl='https://www.ims-sn.com'
+            />
           </div>
         </div>
       </div>
@@ -163,48 +196,42 @@ const IndexPage = () => {
               <TechnologyCard
                 imgSrc={symfonyIcon}
                 title='Symfony'
-                content='Symfony is one of the best and most popular PHP framework. It is my go to framework for Backend/APIs development.'
+                content='Symfony is my go-to framework for Backend/APIs development. I have been working with Symfony for 4 years now, since Symfony version 3.'
               />
             </div>
             <div className='w-full md:w-1/3'>
               <TechnologyCard
                 imgSrc={laravelIcon}
                 title='Laravel'
-                content='I build robust, scalable and maintainable REST APIs for your web
-                or mobile applications using modern technologies and industry
-                requirements.'
+                content='Laravel is one of the most popular PHP frameworks, I use it on some of my recent projects and also for customers according to their needs.'
               />
             </div>
             <div className='w-full md:w-1/3'>
               <TechnologyCard
                 imgSrc={reactIcon}
                 title='React'
-                content='React is Javascript library to build dynamic and elegant web applications from Facebook. It is my go to library for building web interfaces.'
+                content='React is a Javascript library to build dynamic and elegant web applications from Facebook. It is my-go to library for building web interfaces.'
               />
             </div>
             <div className='w-full md:w-1/3'>
               <TechnologyCard
                 imgSrc={angularIcon}
                 title='Angular'
-                content='Angular is a Javascript framework '
+                content='Angular is a Javascript framework to build dynamic and elegant web applications from Google. I often use it on customer projects if they ask for it.'
               />
             </div>
             <div className='w-full md:w-1/3'>
               <TechnologyCard
                 imgSrc={djangoIcon}
                 title='Django'
-                content='I build robust, scalable and maintainable REST APIs for your web
-                or mobile applications using modern technologies and industry
-                requirements.'
+                content='Django is the Python framework for building large and complex web applications. For building complete web apps in Python, I often rely on Django.'
               />
             </div>
             <div className='w-full md:w-1/3'>
               <TechnologyCard
                 imgSrc={flaskIcon}
                 title='Flask'
-                content='I build robust, scalable and maintainable REST APIs for your web
-                or mobile applications using modern technologies and industry
-                requirements.'
+                content='Flask is a Python micro-framework to build REST APIs. I rely on Flask for building smaller, simpler REST APIs for its flexibility.'
               />
             </div>
           </div>
@@ -279,28 +306,32 @@ const IndexPage = () => {
 
       <div className='container px-4 mx-auto py-20'>
         <div className='flex justify-between items-center'>
-          <h2 className='text-2xl font-bold'>Signup to my Newsletter!</h2>
+          <h2 className='text-2xl font-bold'>Get In Touch!</h2>
         </div>
         <div className='mt-6 flex flex-col-reverse md:flex-row md:items-center'>
           <div className='mt-5 md:w-1/2'>
             <p className='text-gray-800 lg:w-4/5'>
-              Lorem ipsum dolor sit amet consectetur adipisicing elit.
-              Recusandae id, obcaecati excepturi voluptatem dolore corporis
-              beatae autem voluptates quam explicabo blanditiis exercitationem
-              illum nostrum ipsa voluptas eligendi ratione molestiae placeat.
+              You can find me on the social platform below or directly send me
+              an email at{' '}
+              <a
+                href='mailto:hello@alioukahere.dev'
+                className='text-blue-700 underline'
+              >
+                hello@alioukahere.dev
+              </a>
+              .
             </p>
-            <p className='mt-4'>
-              <input
-                type='text'
-                placeholder='Email Address'
-                className='p-2 outline-none text-sm md:text-base lg:text-lg'
-              />
-              <input
-                type='submit'
-                value='Subscribe'
-                className='p-2 bg-blue-700 text-sm text-gray-100 font-bold rounded-tr-xl rounded-br-xl md:text-base lg:text-lg'
-              />
-            </p>
+            <div className='flex space-x-4 items-center mt-4'>
+              <a href=''>
+                <img src={github} alt='Github Icon' className='w-8 h-8' />
+              </a>
+              <a href=''>
+                <img src={twitter} alt='Twitter Icon' className='w-8 h-8' />
+              </a>
+              <a href=''>
+                <img src={linkedin} alt='Linkedin Icon' className='w-8 h-8' />
+              </a>
+            </div>
           </div>
           <div className='md:w-1/2'>
             <img
