@@ -1,6 +1,7 @@
 module.exports = {
   siteMetadata: {
     title: 'alioukahere.dev',
+    siteUrl: 'https://alioukahere.dev',
   },
   plugins: [
     'gatsby-plugin-postcss',
