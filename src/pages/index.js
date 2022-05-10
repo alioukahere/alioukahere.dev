@@ -83,12 +83,12 @@ const IndexPage = () => {
                 >
                   Get in touch!
                 </a>
-                <Link
+                {/* <Link
                   to='/blog'
                   className='w-64 h-14 flex items-center justify-center bg-blue-200 rounded-full text-gray-800 font-bold mt-2 sm:mt-0'
                 >
                   Writings
-                </Link>
+                </Link> */}
               </p>
             </div>
           </div>
@@ -194,7 +194,7 @@ const IndexPage = () => {
         </div>
       </div>
 
-      <div className='container px-4 mx-auto py-20 xl:flex'>
+      {/* <div className='container px-4 mx-auto py-20 xl:flex'>
         <div className='xl:w-2/3'>
           <div className='flex justify-between items-center'>
             <h2 className='text-2xl font-bold'>Latest Tutorials</h2>
@@ -252,7 +252,7 @@ const IndexPage = () => {
             </a>
           </div>
         </div>
-      </div>
+      </div> */}
 
       <div className='container px-4 mx-auto py-20'>
         <div className='flex justify-between items-center'>

@@ -9,11 +9,11 @@ export default function Header() {
           alioukahere.dev
         </Link>
         <ul className='hidden sm:flex space-x-6 font-semibold'>
-          <li>
+          {/* <li>
             <Link to='/blog' className='hover:text-blue-700'>
               Blog
             </Link>
-          </li>
+          </li> */}
         </ul>
       </div>
     </header>
