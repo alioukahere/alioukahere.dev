@@ -19,6 +19,7 @@ export default function Project({
           href={projectUrl}
           target='_blank'
           className='text-blue-700 hover:underline'
+          rel='noreferrer'
         >
           {projectUrl}
         </a>{' '}

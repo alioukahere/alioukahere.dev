@@ -1,19 +1,14 @@
 import * as React from 'react'
 import { Helmet } from 'react-helmet'
-import { Link } from 'gatsby'
 
 import Header from '../components/Header'
 import Footer from '../components/Footer'
 import Project from '../components/ProjectCard'
-import Tutorial from '../components/TutorialCard'
 import imageOfMe from '../images/me.png'
 import logo from '../images/icon.png'
 import symfonyIcon from '../images/symfony.svg'
 import laravelIcon from '../images/laravel.svg'
 import reactIcon from '../images/react.svg'
-import angularIcon from '../images/angular.svg'
-import djangoIcon from '../images/django.svg'
-import flaskIcon from '../images/flask.svg'
 import github from '../images/github.svg'
 import linkedin from '../images/linkedin.svg'
 import twitter from '../images/twitter.svg'
@@ -33,7 +28,10 @@ const IndexPage = () => {
           <div className='mt-6 lg:w-2/3'>
             <div className='lg:w-3/4 lg:mx-auto'>
               <h2 className='font-semibold text-gray-400 text-lg lg:text-xl'>
-                Hi, I'm Mamadou Aliou Diallo 👋
+                Hi, I'm Mamadou Aliou Diallo{' '}
+                <span role='img' aria-label='Hi'>
+                  👋
+                </span>
               </h2>
               <h1 className='font-bold mt-4 text-2xl md:text-4xl'>
                 A Full Stack Web Developer &#8212;{' '}
@@ -47,6 +45,7 @@ const IndexPage = () => {
                 <a
                   href='https://symfony.com'
                   target='_blank'
+                  rel='noreferrer'
                   className='font-bold underline'
                 >
                   Symfony
@@ -55,6 +54,7 @@ const IndexPage = () => {
                 <a
                   href='https://laravel.com'
                   target='_blank'
+                  rel='noreferrer'
                   className='font-bold underline'
                 >
                   Laravel
@@ -63,6 +63,7 @@ const IndexPage = () => {
                 <a
                   href='https://reactjs.org'
                   target='_blank'
+                  rel='noreferrer'
                   className='font-bold underline'
                 >
                   React
@@ -83,12 +84,6 @@ const IndexPage = () => {
                 >
                   Get in touch!
                 </a>
-                {/* <Link
-                  to='/blog'
-                  className='w-64 h-14 flex items-center justify-center bg-blue-200 rounded-full text-gray-800 font-bold mt-2 sm:mt-0'
-                >
-                  Writings
-                </Link> */}
               </p>
             </div>
           </div>
@@ -194,66 +189,6 @@ const IndexPage = () => {
         </div>
       </div>
 
-      {/* <div className='container px-4 mx-auto py-20 xl:flex'>
-        <div className='xl:w-2/3'>
-          <div className='flex justify-between items-center'>
-            <h2 className='text-2xl font-bold'>Latest Tutorials</h2>
-            <a href='' className='text-blue-700 underline text-sm'>
-              View blog &#8594;
-            </a>
-          </div>
-          <div className='-mx-3 flex flex-wrap mt-6'>
-            <div className='md:w-1/2 lg:w-1/3 p-3'>
-              <Tutorial />
-            </div>
-            <div className='md:w-1/2 lg:w-1/3 p-3'>
-              <Tutorial />
-            </div>
-            <div className='md:w-1/2 lg:w-1/3 p-3'>
-              <Tutorial />
-            </div>
-            <div className='md:w-1/2 lg:w-1/3 p-3'>
-              <Tutorial />
-            </div>
-            <div className='md:w-1/2 lg:w-1/3 p-3'>
-              <Tutorial />
-            </div>
-            <div className='md:w-1/2 lg:w-1/3 p-3'>
-              <Tutorial />
-            </div>
-          </div>
-        </div>
-        <div className='mt-6 xl:mt-0 xl:w-1/3 xl:ml-8'>
-          <h2 className='text-2xl font-bold mb-6'>Topics</h2>
-          <div className='flex flex-wrap -mx-1'>
-            <a
-              href=''
-              className='bg-blue-200 py-1 px-3 text-sm font-semibold rounded-lg hover:bg-blue-700 hover:text-gray-50 m-1'
-            >
-              PHP
-            </a>
-            <a
-              href=''
-              className='bg-blue-200 py-1 px-3 text-sm font-semibold rounded-lg hover:bg-blue-700 hover:text-gray-50 m-1'
-            >
-              Symfony
-            </a>
-            <a
-              href=''
-              className='bg-blue-200 py-1 px-3 text-sm font-semibold rounded-lg hover:bg-blue-700 hover:text-gray-50 m-1'
-            >
-              Laravel
-            </a>
-            <a
-              href=''
-              className='bg-blue-200 py-1 px-3 text-sm font-semibold rounded-lg hover:bg-blue-700 hover:text-gray-50 m-1'
-            >
-              React
-            </a>
-          </div>
-        </div>
-      </div> */}
-
       <div className='container px-4 mx-auto py-20'>
         <div className='flex justify-between items-center'>
           <h2 className='text-2xl font-bold'>Get In Touch!</h2>
@@ -272,13 +207,25 @@ const IndexPage = () => {
               .
             </p>
             <div className='flex space-x-4 items-center mt-4'>
-              <a href='https://github.com/alioukahere' target='_blank'>
+              <a
+                href='https://github.com/alioukahere'
+                target='_blank'
+                rel='noreferrer'
+              >
                 <img src={github} alt='Github Icon' className='w-8 h-8' />
               </a>
-              <a href='https://twitter.com/alioukahere' target='_blank'>
+              <a
+                href='https://twitter.com/alioukahere'
+                target='_blank'
+                rel='noreferrer'
+              >
                 <img src={twitter} alt='Twitter Icon' className='w-8 h-8' />
               </a>
-              <a href='https://www.linkedin.com/in/alioukahere' target='_blank'>
+              <a
+                href='https://www.linkedin.com/in/alioukahere'
+                target='_blank'
+                rel='noreferrer'
+              >
                 <img src={linkedin} alt='Linkedin Icon' className='w-8 h-8' />
               </a>
             </div>
