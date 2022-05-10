@@ -38,7 +38,7 @@ const IndexPage = () => {
               <h1 className='font-bold mt-4 text-2xl md:text-4xl'>
                 A Full Stack Web Developer &#8212;{' '}
                 <span className='text-blue-700'>
-                  Working with PHP, JS and Python.
+                  Working with PHP and Javascript.
                 </span>
               </h1>
               <p className='mt-4 font-semibold text-gray-400 leading-relaxed md:text-lg md:leading-8'>
@@ -58,38 +58,14 @@ const IndexPage = () => {
                   className='font-bold underline'
                 >
                   Laravel
-                </a>
-                ,{' '}
+                </a>{' '}
+                and{' '}
                 <a
                   href='https://reactjs.org'
                   target='_blank'
                   className='font-bold underline'
                 >
                   React
-                </a>
-                ,{' '}
-                <a
-                  href='https://angular.io'
-                  target='_blank'
-                  className='font-bold underline'
-                >
-                  Angular
-                </a>
-                ,{' '}
-                <a
-                  href='https://www.djangoproject.com'
-                  target='_blank'
-                  className='font-bold underline'
-                >
-                  Django
-                </a>{' '}
-                and{' '}
-                <a
-                  href='https://flask.palletsprojects.com/en/2.0.x'
-                  target='_blank'
-                  className='font-bold underline'
-                >
-                  Flask
                 </a>
                 . I'm available for freelance projects, feel free to ping me at{' '}
                 <a
@@ -153,8 +129,9 @@ const IndexPage = () => {
             <div className='w-full md:w-1/3 mt-8 md:mt-0'>
               <h3 className='font-bold text-xl'>3. Consulting</h3>
               <p className='mt-2 font-semibold text-gray-500'>
-                Not sure if you're doing things the right way? I can come in and
-                help your team be on the right track and deliver faster.
+                Not sure if you're doing things the right way? I've been working
+                as a web developer for 4 years now, I can come in and help your
+                team be on the right track and deliver faster.
               </p>
             </div>
           </div>
@@ -213,27 +190,6 @@ const IndexPage = () => {
                 content='React is a Javascript library to build dynamic and elegant web applications from Facebook. It is my-go to library for building web interfaces.'
               />
             </div>
-            <div className='w-full md:w-1/3'>
-              <TechnologyCard
-                imgSrc={angularIcon}
-                title='Angular'
-                content='Angular is a Javascript framework to build dynamic and elegant web applications from Google. I often use it on customer projects if they ask for it.'
-              />
-            </div>
-            <div className='w-full md:w-1/3'>
-              <TechnologyCard
-                imgSrc={djangoIcon}
-                title='Django'
-                content='Django is the Python framework for building large and complex web applications. For building complete web apps in Python, I often rely on Django.'
-              />
-            </div>
-            <div className='w-full md:w-1/3'>
-              <TechnologyCard
-                imgSrc={flaskIcon}
-                title='Flask'
-                content='Flask is a Python micro-framework to build REST APIs. I rely on Flask for building smaller, simpler REST APIs for its flexibility.'
-              />
-            </div>
           </div>
         </div>
       </div>
@@ -274,25 +230,19 @@ const IndexPage = () => {
               href=''
               className='bg-blue-200 py-1 px-3 text-sm font-semibold rounded-lg hover:bg-blue-700 hover:text-gray-50 m-1'
             >
-              Symfony
-            </a>
-            <a
-              href=''
-              className='bg-blue-200 py-1 px-3 text-sm font-semibold rounded-lg hover:bg-blue-700 hover:text-gray-50 m-1'
-            >
               PHP
             </a>
             <a
               href=''
               className='bg-blue-200 py-1 px-3 text-sm font-semibold rounded-lg hover:bg-blue-700 hover:text-gray-50 m-1'
             >
-              Laravel
+              Symfony
             </a>
             <a
               href=''
               className='bg-blue-200 py-1 px-3 text-sm font-semibold rounded-lg hover:bg-blue-700 hover:text-gray-50 m-1'
             >
-              Flask
+              Laravel
             </a>
             <a
               href=''
@@ -322,13 +272,13 @@ const IndexPage = () => {
               .
             </p>
             <div className='flex space-x-4 items-center mt-4'>
-              <a href=''>
+              <a href='https://github.com/alioukahere' target='_blank'>
                 <img src={github} alt='Github Icon' className='w-8 h-8' />
               </a>
-              <a href=''>
+              <a href='https://twitter.com/alioukahere' target='_blank'>
                 <img src={twitter} alt='Twitter Icon' className='w-8 h-8' />
               </a>
-              <a href=''>
+              <a href='https://www.linkedin.com/in/alioukahere' target='_blank'>
                 <img src={linkedin} alt='Linkedin Icon' className='w-8 h-8' />
               </a>
             </div>
