@@ -1,5 +1,3 @@
-import * as React from 'react'
-
 export default function Tutorial() {
   return (
     <div className='p-6 bg-white rounded-xl cursor-pointer'>
