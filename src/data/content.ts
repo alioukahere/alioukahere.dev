@@ -21,18 +21,18 @@ export const services: Service[] = [
 
 export const projects: Project[] = [
   {
-    title: 'Kaherecode',
+    title: 'ScaniFood',
     description:
-      'A community platform for developers to learn and share programming knowledge. Built with Laravel and React.',
-    link: 'https://kaherecode.com',
-    tech: ['Laravel', 'React', 'Tailwind'],
+      'A cloud-based solution that enables restaurants to create digital menus accessible via QR codes.',
+    link: 'https://scanifood.com',
+    tech: ['Symfony', 'React', 'Tailwind'],
   },
   {
-    title: 'IMS',
+    title: 'Kaherecode',
     description:
-      'A marketplace for real estate and ads management. A complete solution for property listings and user management.',
-    link: 'https://ims.com',
-    tech: ['Laravel', 'Alpine.js', 'Tailwind'],
+      'A community platform for developers to learn and share programming knowledge.',
+    link: 'https://kahere.academy',
+    tech: ['Symfony', 'PHP8', 'Tailwind'],
   },
 ]
 

@@ -24,7 +24,7 @@ export default function ProjectsSection() {
               {project.tech.map((tech) => (
                 <span
                   key={tech}
-                  className='px-4 py-1.5 text-sm bg-gray-100 dark:bg-gray-800
+                  className='px-4 py-1.5 text-sm bg-gray-100 dark:bg-gray-700
                   text-gray-700 dark:text-gray-300 rounded-full font-medium'
                 >
                   {tech}
