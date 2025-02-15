@@ -1,5 +1,40 @@
 import BlogPostCard from '@/components/blog/BlogPostCard'
+import { SITE_NAME, SITE_URL } from '@/constants'
 import { getAllPosts } from '@/lib/mdx'
+import { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'PHP and JavaScript Development | Mamadou Aliou Diallo',
+  description:
+    'Practical tutorials and insights about PHP, JavaScript, Symfony, Laravel, and React development. Learn web development through real-world examples and best practices.',
+  keywords: [
+    'PHP Tutorials',
+    'JavaScript Tutorials',
+    'Laravel Development',
+    'Symfony Development',
+    'React Development',
+    'Web Development Blog',
+    'Full Stack Development',
+    'Programming Tutorials',
+    'Code Examples',
+    'Development Best Practices',
+  ],
+  openGraph: {
+    title: 'PHP and JavaScript Development | Mamadou Aliou Diallo',
+    description:
+      'Practical tutorials and insights about PHP, JavaScript, Symfony, Laravel, and React development.',
+    url: `${SITE_URL}/blog`,
+    siteName: SITE_NAME,
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'PHP and JavaScript Development | Mamadou Aliou Diallo',
+    description:
+      'Practical tutorials and insights about PHP, JavaScript, Symfony, Laravel, and React development.',
+    creator: '@alioukahere',
+  },
+}
 
 export default async function BlogPage() {
   const posts = await getAllPosts()
