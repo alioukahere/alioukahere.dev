@@ -1,5 +1,7 @@
+import { SITE_URL } from '@/constants'
 import { getPostBySlug } from '@/lib/mdx'
 import { formatDate } from '@/lib/utils'
+import { Metadata } from 'next'
 import { compileMDX } from 'next-mdx-remote/rsc'
 import { notFound } from 'next/navigation'
 import React from 'react'
@@ -152,4 +154,40 @@ export default async function BlogPost({
       </main>
     </div>
   )
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  readonly params: Promise<{ slug: string }> & { slug: string }
+}): Promise<Metadata> {
+  const { slug } = await params
+  const post = await getPostBySlug(slug)
+
+  if (!post) {
+    return {
+      title: '404 - Page Not Found',
+      description: 'Page not found',
+      openGraph: {
+        title: '404 - Page Not Found',
+        description: 'Page not found',
+        type: 'website',
+        url: SITE_URL,
+        siteName: 'Mamadou Aliou Diallo',
+      },
+    }
+  }
+
+  return {
+    title: post.title,
+    description: post.excerpt,
+    openGraph: {
+      title: post.title,
+      description: post.excerpt,
+      type: 'article',
+      publishedTime: post.publishedAt,
+      authors: ['Mamadou Aliou Diallo'],
+      url: `${SITE_URL}/blog/${post.slug}`,
+    },
+  }
 }
