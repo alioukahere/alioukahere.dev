@@ -1,6 +1,6 @@
 import { CONTACT_EMAIL, SOCIAL_LINKS } from '@/constants'
 import { SiGithub, SiX } from '@icons-pack/react-simple-icons'
-import { Mail } from 'lucide-react'
+import { LinkedinIcon, Mail } from 'lucide-react'
 
 export default function Footer() {
   return (
@@ -11,25 +11,16 @@ export default function Footer() {
             © 2024 Mamadou Aliou Diallo. All Rights Reserved.
           </div>
           <div className='flex items-center gap-8'>
-            <a
-              href={`mailto:${CONTACT_EMAIL}`}
-              className='text-gray-700 dark:text-gray-200 hover:text-blue-600
-              dark:hover:text-blue-500 transition-colors duration-200'
-            >
+            <a href={`mailto:${CONTACT_EMAIL}`}>
               <Mail className='w-5 h-5' />
             </a>
-            <a
-              href={SOCIAL_LINKS.github}
-              className='text-gray-700 dark:text-gray-200 hover:text-blue-600
-              dark:hover:text-blue-500 transition-colors duration-200'
-            >
+            <a href={SOCIAL_LINKS.github} target='_blank'>
               <SiGithub className='w-5 h-5' />
             </a>
-            <a
-              href={SOCIAL_LINKS.twitter}
-              className='text-gray-700 dark:text-gray-200 hover:text-blue-600
-              dark:hover:text-blue-500 transition-colors duration-200'
-            >
+            <a href={SOCIAL_LINKS.linkedin} target='_blank'>
+              <LinkedinIcon className='w-5 h-5' />
+            </a>
+            <a href={SOCIAL_LINKS.twitter} target='_blank'>
               <SiX className='w-5 h-5' />
             </a>
           </div>

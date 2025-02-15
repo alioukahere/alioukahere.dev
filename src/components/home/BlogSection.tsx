@@ -14,15 +14,10 @@ export default function BlogSection({ posts }: BlogSectionProps) {
         <h2 className='section-title mb-0'>Latest Blog Posts</h2>
         <Link
           href='/blog'
-          className='text-blue-600 hover:text-blue-700 dark:text-blue-400
-          dark:hover:text-blue-300 font-medium flex items-center gap-2
-          transition-colors duration-200 group'
+          className='font-medium flex items-center gap-2 transition-colors duration-200 group'
         >
           View all posts
-          <ArrowRight
-            className='w-4 h-4 transform transition-transform
-          group-hover:translate-x-0.5'
-          />
+          <ArrowRight className='w-4 h-4 transform transition-transform group-hover:translate-x-0.5' />
         </Link>
       </div>
 

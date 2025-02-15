@@ -1,6 +1,6 @@
 'use client'
 
-import { Sun, Moon } from 'lucide-react'
+import { Sun, Moon, LinkedinIcon } from 'lucide-react'
 import { useDarkMode } from '@/hooks/useDarkMode'
 import { SOCIAL_LINKS } from '@/constants'
 import { SiGithub, SiX } from '@icons-pack/react-simple-icons'
@@ -19,11 +19,11 @@ export default function Header() {
 
   return (
     <nav className='content-container py-8 flex justify-between items-center'>
-      <h1 className='text-2xl font-bold'>
-        <Link href='/' className='!text-gray-900 dark:!text-white'>
+      <Link href='/'>
+        <h1 className='text-2xl text-gray-900 dark:text-white font-bold'>
           alioukahere.dev
-        </Link>
-      </h1>
+        </h1>
+      </Link>
       <div className='flex items-center gap-6'>
         <button
           onClick={toggleDarkMode}
@@ -31,16 +31,13 @@ export default function Header() {
         >
           {renderDarkModeIcon()}
         </button>
-        <a
-          href={SOCIAL_LINKS.github}
-          className='text-gray-700 dark:text-gray-200'
-        >
+        <a href={SOCIAL_LINKS.github} target='_blank'>
           <SiGithub className='w-5 h-5' />
         </a>
-        <a
-          href={SOCIAL_LINKS.twitter}
-          className='text-gray-700 dark:text-gray-200'
-        >
+        <a href={SOCIAL_LINKS.linkedin} target='_blank'>
+          <LinkedinIcon className='w-5 h-5' />
+        </a>
+        <a href={SOCIAL_LINKS.twitter} target='_blank'>
           <SiX className='w-5 h-5' />
         </a>
       </div>

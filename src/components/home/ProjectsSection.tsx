@@ -34,9 +34,7 @@ export default function ProjectsSection() {
 
             <a
               href={project.link}
-              className='text-blue-600 hover:text-blue-700 dark:text-blue-400
-              dark:hover:text-blue-300 font-medium inline-flex items-center
-              transition-colors duration-200 mt-auto group'
+              className='font-medium inline-flex items-center duration-200 mt-auto group'
             >
               View Project {` `}
               <span className='ml-1 transform transition-transform group-hover:translate-x-0.5'>

@@ -5,17 +5,17 @@ export const services: Service[] = [
   {
     title: 'Backend/APIs',
     description:
-      'I build robust, scalable and maintainable REST APIs for your web or mobile applications using modern technologies following best practices.',
+      "I build the engine that powers your apps. Whether you need a solid API for your mobile app or a robust backend system, I'll help you create something that's both powerful and maintainable.",
   },
   {
     title: 'Web Applications',
     description:
-      'I build responsive and elegant web applications using modern frameworks. UX is as important as UI, so I make sure your web application is accessible.',
+      'Need a website that works beautifully and loads fast? I create modern web applications that your users will love to use, with special attention to making them accessible to everyone.',
   },
   {
     title: 'Consulting',
     description:
-      "Not sure if you're doing things the right way? I've been working as a web developer for 4 years now. I can come in and help your team be on the right track and deliver faster.",
+      'Not sure about the technical side of things? With 5+ years of experience building web applications, I can help guide your project in the right direction. Think of me as your technical co-pilot.',
   },
 ]
 
@@ -23,14 +23,14 @@ export const projects: Project[] = [
   {
     title: 'ScaniFood',
     description:
-      'A cloud-based solution that enables restaurants to create digital menus accessible via QR codes.',
+      'A smart solution that helps restaurants create digital menus with QR codes. No more printing paper menus - just scan and order!',
     link: 'https://scanifood.com',
     tech: ['Symfony', 'React', 'Tailwind'],
   },
   {
     title: 'Kaherecode',
     description:
-      'A community platform for developers to learn and share programming knowledge.',
+      'A friendly space where developers can learn and share what they know. Because learning to code is better when we help each other.',
     link: 'https://kahere.academy',
     tech: ['Symfony', 'PHP8', 'Tailwind'],
   },

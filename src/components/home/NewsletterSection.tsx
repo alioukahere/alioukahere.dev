@@ -16,9 +16,8 @@ export default function NewsletterSection() {
         <h2 className='section-title'>Want More Like This?</h2>
 
         <p className='text-lg text-gray-600 dark:text-gray-300 mb-8 leading-relaxed max-w-xl mx-auto'>
-          Join my newsletter where I share in-depth tutorials, tips, and
-          insights from my experience as a full-stack developer. No spam,
-          unsubscribe anytime.
+          I share what I learn along the way - tips, tutorials, and real stories
+          from my journey as a developer. No fluff, just useful stuff.
         </p>
 
         <form
