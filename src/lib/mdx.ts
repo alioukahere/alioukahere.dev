@@ -10,7 +10,7 @@ const POSTS_PATH = path.join(process.cwd(), 'content/blog')
 
 interface Frontmatter {
   title: string
-  date: string
+  publishedAt: string
   excerpt: string
   category: string
 }
@@ -43,7 +43,7 @@ export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
     return {
       slug: realSlug,
       title: frontmatter.title,
-      date: frontmatter.date,
+      publishedAt: frontmatter.publishedAt,
       excerpt: frontmatter.excerpt,
       category: frontmatter.category,
       readingTime: readingTimeResult.text,
@@ -68,7 +68,8 @@ export async function getAllPosts(): Promise<BlogPost[]> {
     }
 
     return posts.sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+      (a, b) =>
+        new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
     )
   } catch (error) {
     console.error('Error getting all posts:', error)

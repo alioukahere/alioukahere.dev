@@ -10,7 +10,7 @@ export interface Project {
 export interface BlogPost {
   slug: string
   title: string
-  date: string
+  publishedAt: string
   excerpt: string
   category: string
   readingTime: string

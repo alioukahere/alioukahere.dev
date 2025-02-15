@@ -1,4 +1,3 @@
-// app/blog/[slug]/page.tsx
 import { getPostBySlug } from '@/lib/mdx'
 import { formatDate } from '@/lib/utils'
 import { compileMDX } from 'next-mdx-remote/rsc'
@@ -100,9 +99,10 @@ const components = {
 export default async function BlogPost({
   params,
 }: {
-  readonly params: { slug: string }
+  readonly params: Promise<{ slug: string }> & { slug: string }
 }) {
-  const post = await getPostBySlug(params.slug)
+  const { slug } = await params
+  const post = await getPostBySlug(slug)
 
   if (!post) {
     notFound()
@@ -139,8 +139,8 @@ export default async function BlogPost({
           </h1>
 
           <div className='flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400'>
-            <time dateTime={post.date}>
-              Published on {formatDate(post.date)}
+            <time dateTime={post.publishedAt}>
+              Published on {formatDate(post.publishedAt)}
             </time>
           </div>
         </header>

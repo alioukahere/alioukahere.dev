@@ -40,16 +40,16 @@ export const technologies: Technology[] = [
   {
     name: 'Symfony',
     icon: SiSymfony,
-    years: 4,
-  },
-  {
-    name: 'Laravel',
-    icon: SiLaravel,
-    years: 3,
+    years: 6,
   },
   {
     name: 'React',
     icon: SiReact,
+    years: 3,
+  },
+  {
+    name: 'Laravel',
+    icon: SiLaravel,
     years: 2,
   },
 ]
