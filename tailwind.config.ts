@@ -1,4 +1,5 @@
 import type { Config } from 'tailwindcss'
+import typography from '@tailwindcss/typography'
 
 export default {
   darkMode: 'class',
@@ -32,10 +33,16 @@ export default {
               marginTop: '2em',
               marginBottom: '1em',
             },
+            'code::before': {
+              content: '""',
+            },
+            'code::after': {
+              content: '""',
+            },
           },
         },
       },
     },
   },
-  plugins: [],
+  plugins: [typography],
 } satisfies Config

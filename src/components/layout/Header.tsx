@@ -1,7 +1,10 @@
+'use client'
+
 import { Sun, Moon } from 'lucide-react'
 import { useDarkMode } from '@/hooks/useDarkMode'
 import { SOCIAL_LINKS } from '@/constants'
 import { SiGithub, SiX } from '@icons-pack/react-simple-icons'
+import Link from 'next/link'
 
 export default function Header() {
   const { darkMode, toggleDarkMode } = useDarkMode()
@@ -16,8 +19,10 @@ export default function Header() {
 
   return (
     <nav className='content-container py-8 flex justify-between items-center'>
-      <h1 className='text-2xl font-bold text-gray-900 dark:text-white'>
-        alioukahere.dev
+      <h1 className='text-2xl font-bold'>
+        <Link href='/' className='!text-gray-900 dark:!text-white'>
+          alioukahere.dev
+        </Link>
       </h1>
       <div className='flex items-center gap-6'>
         <button

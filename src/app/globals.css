@@ -64,3 +64,18 @@
     @apply text-lg text-gray-600 dark:text-gray-300 mb-12 leading-relaxed;
   }
 }
+
+/* syntax-highlighting */
+.prose pre {
+  color: rgb(229, 231, 235) !important;
+}
+
+.prose pre code {
+  background-color: transparent !important;
+  border: none !important;
+  font-weight: 400 !important;
+  color: inherit !important;
+  font-size: inherit !important;
+  font-family: inherit !important;
+  line-height: inherit !important;
+}

@@ -1,3 +1,5 @@
+import { MDXRemoteSerializeResult } from 'next-mdx-remote'
+
 export interface Project {
   title: string
   description: string
@@ -6,11 +8,15 @@ export interface Project {
 }
 
 export interface BlogPost {
+  slug: string
   title: string
-  category: string
   date: string
   excerpt: string
-  slug: string
+  category: string
+  readingTime: string
+  content:
+    | string
+    | MDXRemoteSerializeResult<Record<string, unknown>, Record<string, unknown>>
 }
 
 export interface Technology {

@@ -1,3 +1,5 @@
+'use client'
+
 import { useState } from 'react'
 
 export default function NewsletterSection() {
@@ -13,17 +15,12 @@ export default function NewsletterSection() {
       <div className='max-w-2xl mx-auto text-center'>
         <h2 className='section-title'>Want More Like This?</h2>
 
-        {/* Newsletter description with improved readability */}
-        <p
-          className='text-lg text-gray-600 dark:text-gray-300 mb-8 leading-relaxed
-          max-w-xl mx-auto'
-        >
+        <p className='text-lg text-gray-600 dark:text-gray-300 mb-8 leading-relaxed max-w-xl mx-auto'>
           Join my newsletter where I share in-depth tutorials, tips, and
           insights from my experience as a full-stack developer. No spam,
           unsubscribe anytime.
         </p>
 
-        {/* Form with enhanced visual feedback */}
         <form
           onSubmit={handleSubmit}
           className='flex flex-col sm:flex-row gap-4'
@@ -50,7 +47,6 @@ export default function NewsletterSection() {
           </button>
         </form>
 
-        {/* Privacy note with subdued styling */}
         <p className='text-sm text-gray-500 dark:text-gray-400 mt-4'>
           By subscribing, you agree to receive occasional updates. No spam,
           ever.
