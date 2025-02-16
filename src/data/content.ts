@@ -15,7 +15,7 @@ export const services: Service[] = [
   {
     title: 'Consulting',
     description:
-      'Not sure about the technical side of things? With 5+ years of experience building web applications, I can help guide your project in the right direction. Think of me as your technical co-pilot.',
+      'Not sure about the technical side of things? With 6+ years of experience building web applications, I can help guide your project in the right direction. Think of me as your technical co-pilot.',
   },
 ]
 

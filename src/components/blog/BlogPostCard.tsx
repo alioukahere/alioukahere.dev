@@ -36,8 +36,8 @@ export default function BlogPostCard({ post }: BlogPostCardProps) {
           <time dateTime={post.publishedAt}>
             {formatDate(post.publishedAt)}
           </time>
-          <span>•</span>
-          <span>{post.readingTime}</span>
+          <span className='hidden sm:inline-block'>•</span>
+          <span className='hidden sm:inline-block'>{post.readingTime}</span>
         </div>
 
         <Link

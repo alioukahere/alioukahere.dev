@@ -2,7 +2,11 @@
 
 import { useState } from 'react'
 
-export default function NewsletterSection() {
+export default function NewsletterSection({
+  fromBlog,
+}: {
+  readonly fromBlog?: boolean
+}) {
   const [email, setEmail] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -13,7 +17,11 @@ export default function NewsletterSection() {
   return (
     <section className='section-padding border-t border-gray-200 dark:border-gray-800'>
       <div className='max-w-2xl mx-auto text-center'>
-        <h2 className='section-title'>Want More Like This?</h2>
+        {fromBlog ? (
+          <h2 className='section-title'>Want More Like This?</h2>
+        ) : (
+          <h2 className='section-title'>Subscribe to my Newsletter</h2>
+        )}
 
         <p className='text-lg text-gray-600 dark:text-gray-300 mb-8 leading-relaxed max-w-xl mx-auto'>
           I share what I learn along the way - tips, tutorials, and real stories

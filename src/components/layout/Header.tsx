@@ -24,10 +24,10 @@ export default function Header() {
           alioukahere.dev
         </h1>
       </Link>
-      <div className='flex items-center gap-6'>
+      <div className='flex items-center gap-2 sm:gap-4'>
         <button
           onClick={toggleDarkMode}
-          className='p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200'
+          className='p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-200'
         >
           {renderDarkModeIcon()}
         </button>
