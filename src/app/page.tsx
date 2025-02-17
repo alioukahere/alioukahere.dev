@@ -3,7 +3,6 @@ import ServicesSection from '@/components/home/ServicesSection'
 import ProjectsSection from '@/components/home/ProjectsSection'
 import BlogSection from '@/components/home/BlogSection'
 import TechnologiesSection from '@/components/home/TechnologiesSection'
-import NewsletterSection from '@/components/home/NewsletterSection'
 import { getAllPosts } from '@/lib/mdx'
 
 export default async function Home() {
@@ -16,7 +15,7 @@ export default async function Home() {
       <ProjectsSection />
       <BlogSection posts={posts.slice(0, 4)} />
       <TechnologiesSection />
-      <NewsletterSection />
+      {/* <NewsletterSection /> */}
     </main>
   )
 }

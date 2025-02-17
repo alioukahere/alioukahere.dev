@@ -1,4 +1,3 @@
-import NewsletterSection from '@/components/home/NewsletterSection'
 import { SITE_URL } from '@/constants'
 import { getPostBySlug } from '@/lib/mdx'
 import { formatDate } from '@/lib/utils'
@@ -154,7 +153,7 @@ export default async function BlogPost({
         </article>
       </main>
 
-      <NewsletterSection fromBlog />
+      {/* <NewsletterSection fromBlog /> */}
     </div>
   )
 }
