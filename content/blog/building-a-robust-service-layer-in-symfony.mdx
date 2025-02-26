@@ -1,6 +1,6 @@
 ---
 title: "Building a Robust Service Layer in Symfony: A Comprehensive Guide"
-publishedAt: '2024-02-24'
+publishedAt: '2024-02-26'
 excerpt: "The service layer is an architectural pattern that sits between your controllers and your data access layer. It acts as a home for your business logic, keeping it separate from your controllers and data models."
 category: 'Design Patterns'
 ---
@@ -19,19 +19,22 @@ The Service Layer sits between your controllers (which handle HTTP requests) and
 
 Before diving into implementation, let's understand why the Service Layer pattern is so valuable:
 
-- **It keeps your controllers slim and focused**. Controllers should only handle HTTP concerns—receiving requests and returning responses.
-- **It makes your code more reusable**. The same business logic can be used by different controllers, commands, event subscribers, and more.
-- **It improves testability**. Testing business logic in isolation is much easier than testing controllers that mix HTTP and business concerns.
-- **It enhances maintainability**. When business rules change, you only need to update the relevant service, not every controller that uses it.
-- **It facilitates collaboration**. Different team members can work on different services without stepping on each other's toes.
+1. **It keeps your controllers slim and focused**. Controllers should only handle HTTP concerns—receiving requests and returning responses.
+
+2. **It makes your code more reusable**. The same business logic can be used by different controllers, commands, event subscribers, and more.
+
+3. **It improves testability**. Testing business logic in isolation is much easier than testing controllers that mix HTTP and business concerns.
+
+4. **It enhances maintainability**. When business rules change, you only need to update the relevant service, not every controller that uses it.
 
 ## The Problem: When Controllers Do Too Much
 
-Let's look at a real-world example. Imagine you're building a payment processing system that needs to support multiple payment methods: PayPal, Wave, and Orange Money.
+Let's look at a real-world example. Imagine you're building a payment processing system that needs to support multiple payment methods: Wave, and Orange Money.
 
 Without a service layer, your controller might look something like this:
 
 ```php
+<?php
 // src/Controller/PaymentController.php
 namespace App\Controller;
 
@@ -41,88 +44,135 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 
 class PaymentController extends AbstractController
 {
+    public function __construct(
+        private readonly EntityManagerInterface $entityManager,
+        private readonly HttpClientInterface $httpClient,
+        private readonly LoggerInterface $logger,
+        private readonly MailerInterface $mailer,
+    ) {}
+
     public function processPayment(Request $request)
     {
-        // Get data from request
         $amount = $request->get('amount');
         $paymentMethod = $request->get('payment_method');
 
-        // Validate input
         if (!is_numeric($amount) || $amount <= 0) {
             return new JsonResponse(['error' => 'Invalid amount'], 400);
         }
 
-        if (!in_array($paymentMethod, ['paypal', 'wave', 'orange'])) {
+        if (!in_array($paymentMethod, ['wave', 'orange'])) {
             return new JsonResponse(['error' => 'Invalid payment method'], 400);
         }
 
-        // Process payment based on method
-        if ($paymentMethod === 'paypal') {
-            // Configure PayPal client
-            $paypalClient = new \PayPal\Rest\ApiContext(
-                new \PayPal\Auth\OAuthTokenCredential(
-                    $this->getParameter('paypal.client_id'),
-                    $this->getParameter('paypal.client_secret')
-                )
-            );
+        $externalPaymentId = null;
+        $checkoutUrl = null;
 
-            // Create PayPal payment
-            $payment = new \PayPal\Api\Payment();
-            $payment->setIntent('sale');
+        if ($paymentMethod === 'wave') {
+            $waveApiKey = $this->getParameter('wave.api_key');
+            $waveBaseUrl = $this->getParameter('wave.base_url');
 
-            // Add payment details, payer info, etc.
-            // ...
+            $checkoutData = [
+                'amount' => number_format($amount, 2, '.', ''),
+                'currency' => 'XOF',
+                'error_url' => $this->generateUrl('payment_error', [
+                    'payment_method' => 'wave'
+                ], UrlGeneratorInterface::ABSOLUTE_URL),
+                'success_url' => $this->generateUrl('payment_success', [
+                    'payment_method' => 'wave'
+                ], UrlGeneratorInterface::ABSOLUTE_URL),
+            ];
 
             try {
-                $payment->create($paypalClient);
+                $response = $this->httpClient->request('POST', $waveBaseUrl . '/v1/checkout/sessions', [
+                    'headers' => [
+                        'Authorization' => 'Bearer ' . $waveApiKey,
+                        'Content-Type' => 'application/json'
+                    ],
+                    'json' => $checkoutData
+                ]);
 
-                // Save transaction in database
-                $transaction = new Transaction();
-                $transaction->setAmount($amount);
-                $transaction->setPaymentMethod('paypal');
-                $transaction->setTransactionId($payment->getId());
-                $transaction->setStatus('pending');
+                $responseData = $response->toArray();
 
-                $entityManager = $this->getDoctrine()->getManager();
-                $entityManager->persist($transaction);
-                $entityManager->flush();
+                if (!isset($responseData['id']) || !isset($responseData['wave_launch_url'])) {
+                    throw new \Exception('Invalid response from Wave API');
+                }
 
-                // Send confirmation email
-                $mailer = $this->get('mailer');
-                $message = (new \Swift_Message('Payment Processing'))
-                    ->setTo($this->getUser()->getEmail())
-                    ->setBody('Your payment is being processed...');
-                $mailer->send($message);
+                $externalPaymentId = $responseData['id'];
+                $checkoutUrl = $responseData['wave_launch_url'];
+            } catch (\Exception $e) {
+                $this->logger->error('Wave checkout error', [
+                    'user_id' => $user->getId(),
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
 
                 return new JsonResponse([
-                    'success' => true,
-                    'redirect_url' => $payment->getApprovalLink()
-                ]);
-            } catch (\Exception $e) {
-                return new JsonResponse(['error' => 'PayPal error: ' . $e->getMessage()], 500);
+                    'success' => false,
+                    'error' => 'Wave payment error: ' . $e->getMessage()
+                ], 500);
             }
         }
 
-        // Similar blocks for Wave payment processing
-        else if ($paymentMethod === 'wave') {
-            // Initialize Wave API
-            // Process payment
-            // Save transaction
-            // Send notifications
-            // ...
+        if ($paymentMethod === 'orange') {
+            // Another large block of code for Orange Money payment processing
         }
 
-        // Similar blocks for Orange Money payment processing
-        else if ($paymentMethod === 'orange') {
-            // Initialize Orange Money API
-            // Process payment
-            // Save transaction
-            // Send notifications
-            // ...
+        if (null === $externalPaymentId || null === $checkoutUrl) {
+            return new JsonResponse([
+               'success' => false,
+               'error' => 'Failed to initialize payment'
+           ], 500);
         }
+
+        $payment = new Payment();
+        $payment->setAmount($amount);
+        $payment->setPaymentMethod($paymentMethod);
+        $payment->setExternalId($externalPaymentId);
+        $payment->setStatus(PaymentStatus::PENDING);
+        $payment->setUser($user);
+
+        $this->entityManager->persist($payment);
+        $this->entityManager->flush();
+
+        $email = (new Email())
+            ->to($user->getEmail())
+            ->subject('Your Payment is Being Processed')
+            ->html($this->renderView('emails/payment_initiated.html.twig', [
+                'user' => $user,
+                'payment' => $payment
+            ]));
+        $this->mailer->send($email);
+
+        $this->logger->info('Payment initiated', [
+            'user_id' => $user->getId(),
+            'payment_id' => $payment->getId(),
+            'external_id' => $externalPaymentId,
+            'method' => $paymentMethod,
+            'amount' => $amount
+        ]);
+
+        return new JsonResponse([
+            'success' => true,
+            'redirect_url' => $checkoutUrl
+        ]);
     }
 
     public function confirmPayment(Request $request)
+    {
+        // Another large method with similar issues...
+    }
+
+    public function cancelPayment(Request $request)
+    {
+        // Another large method with similar issues...
+    }
+
+    public function getPaymentStatus(Request $request)
+    {
+        // Another large method with similar issues...
+    }
+
+    public function paymentWebhook(Request $request)
     {
         // Another large method with similar issues...
     }
@@ -137,7 +187,7 @@ This approach has several problems:
 - **Adding a new payment method requires modifying the controller**. This violates the Open/Closed Principle, which states that software entities should be open for extension but closed for modification.
 - **Each payment method requires its own implementation details right in the controller**. The differences in how each gateway works are exposed at the controller level.
 
-This last point is especially important. Notice how each payment method has its own specific implementation, with different APIs, different data formats, and different error handling. This is precisely the problem that the Adapter pattern (which we'll cover in the next tutorial) will help us solve. But first, let's see how the Service Layer pattern can bring order to this chaos.
+This last point is especially important. Each payment method has its own specific implementation, with different APIs, different data formats, and different error handling. This is precisely the problem that the Adapter pattern (which we'll cover in the next tutorial) will help us solve. But first, let's see how the Service Layer pattern can bring order to this chaos.
 
 ## Implementing the Service Layer Pattern
 
