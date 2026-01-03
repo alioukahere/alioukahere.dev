@@ -11,9 +11,11 @@ export interface BlogPost {
   slug: string
   title: string
   publishedAt: string
+  updatedAt?: string
   excerpt: string
   category: string
   readingTime: string
+  image?: string
   content:
     | string
     | MDXRemoteSerializeResult<Record<string, unknown>, Record<string, unknown>>

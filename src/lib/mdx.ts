@@ -11,8 +11,10 @@ const POSTS_PATH = path.join(process.cwd(), 'content/blog')
 interface Frontmatter {
   title: string
   publishedAt: string
+  updatedAt?: string
   excerpt: string
   category: string
+  image?: string
 }
 
 // Get all post slugs
@@ -44,9 +46,11 @@ export async function getPostBySlug(slug: string): Promise<BlogPost | null> {
       slug: realSlug,
       title: frontmatter.title,
       publishedAt: frontmatter.publishedAt,
+      updatedAt: frontmatter.updatedAt,
       excerpt: frontmatter.excerpt,
       category: frontmatter.category,
       readingTime: readingTimeResult.text,
+      image: frontmatter.image,
       content,
     }
   } catch (error) {

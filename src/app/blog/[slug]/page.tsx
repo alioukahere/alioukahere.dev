@@ -1,4 +1,4 @@
-import { SITE_URL } from '@/constants'
+import { SITE_NAME, SITE_URL } from '@/constants'
 import { getPostBySlug } from '@/lib/mdx'
 import { formatDate } from '@/lib/utils'
 import { Metadata } from 'next'
@@ -8,6 +8,8 @@ import React from 'react'
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism'
 import remarkGfm from 'remark-gfm'
+import ArticleSchema from '@/components/ArticleSchema'
+import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 
 interface CodeProps {
   className?: string
@@ -122,8 +124,16 @@ export default async function BlogPost({
     },
   })
 
+  const breadcrumbItems = [
+    { name: 'Home', url: '/' },
+    { name: 'Blog', url: '/blog' },
+    { name: post.title },
+  ]
+
   return (
     <div className='min-h-screen bg-white dark:bg-[#0B1120]'>
+      <ArticleSchema post={post} />
+      <BreadcrumbSchema items={breadcrumbItems} />
       <main className='max-w-3xl mx-auto px-4 py-16'>
         {/* Article Header */}
         <header className='mb-12'>
@@ -170,26 +180,46 @@ export async function generateMetadata({
     return {
       title: '404 - Page Not Found',
       description: 'Page not found',
-      openGraph: {
-        title: '404 - Page Not Found',
-        description: 'Page not found',
-        type: 'website',
-        url: SITE_URL,
-        siteName: 'Mamadou Aliou Diallo',
-      },
     }
   }
 
+  const canonicalUrl = `${SITE_URL}/blog/${post.slug}`
+  const imageUrl = post.image
+    ? post.image.startsWith('http')
+      ? post.image
+      : `${SITE_URL}${post.image}`
+    : `${SITE_URL}/images/alioukahere.png`
+
   return {
-    title: post.title,
+    title: `${post.title} | ${SITE_NAME}`,
     description: post.excerpt,
+    alternates: {
+      canonical: canonicalUrl,
+    },
     openGraph: {
       title: post.title,
       description: post.excerpt,
       type: 'article',
       publishedTime: post.publishedAt,
-      authors: ['Mamadou Aliou Diallo'],
-      url: `${SITE_URL}/blog/${post.slug}`,
+      modifiedTime: post.updatedAt || post.publishedAt,
+      authors: [SITE_NAME],
+      url: canonicalUrl,
+      siteName: SITE_NAME,
+      images: [
+        {
+          url: imageUrl,
+          width: 1200,
+          height: 630,
+          alt: post.title,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: post.title,
+      description: post.excerpt,
+      creator: '@alioukahere',
+      images: [imageUrl],
     },
   }
 }
