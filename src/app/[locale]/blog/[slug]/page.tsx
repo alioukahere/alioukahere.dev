@@ -11,6 +11,7 @@ import { evaluate } from '@mdx-js/mdx'
 import * as runtime from 'react/jsx-runtime'
 import remarkGfm from 'remark-gfm'
 import type { Locale } from '@/types'
+import { mdxComponents } from '@/components/mdx/MDXComponents'
 
 interface BlogPostProps {
   params: Promise<{ slug: string; locale: string }>
@@ -77,7 +78,7 @@ export default async function BlogPost({ params }: BlogPostProps) {
         </header>
 
         <article className='prose prose-lg dark:prose-invert max-w-none'>
-          <MDXContent />
+          <MDXContent components={mdxComponents} />
         </article>
       </main>
     </div>
