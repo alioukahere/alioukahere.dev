@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 320" fill="none">
+  <style>
+    .box { fill: #1e293b; stroke: #3b82f6; stroke-width: 2; rx: 8; }
+    .title { fill: #f8fafc; font-family: system-ui, sans-serif; font-size: 14px; font-weight: 600; }
+    .subtitle { fill: #94a3b8; font-family: system-ui, sans-serif; font-size: 11px; }
+    .arrow { stroke: #3b82f6; stroke-width: 2; fill: none; }
+    .arrow-head { fill: #3b82f6; }
+  </style>
+
+  <!-- Entry Points Box -->
+  <rect class="box" x="20" y="20" width="460" height="60"/>
+  <text class="title" x="250" y="45" text-anchor="middle">Entry Points</text>
+  <text class="subtitle" x="250" y="62" text-anchor="middle">(Controllers, Console Commands, Message Handlers)</text>
+
+  <!-- Arrow down -->
+  <path class="arrow" d="M250 80 L250 110"/>
+  <polygon class="arrow-head" points="250,120 244,110 256,110"/>
+
+  <!-- Service Layer Box -->
+  <rect class="box" x="20" y="120" width="460" height="60"/>
+  <text class="title" x="250" y="145" text-anchor="middle">Service Layer</text>
+  <text class="subtitle" x="250" y="162" text-anchor="middle">(Business Logic, Workflows, Validation)</text>
+
+  <!-- Arrows down -->
+  <path class="arrow" d="M150 180 L150 210"/>
+  <polygon class="arrow-head" points="150,220 144,210 156,210"/>
+
+  <path class="arrow" d="M350 180 L350 210"/>
+  <polygon class="arrow-head" points="350,220 344,210 356,210"/>
+
+  <!-- Data Access Layer Box -->
+  <rect class="box" x="20" y="220" width="210" height="80"/>
+  <text class="title" x="125" y="250" text-anchor="middle">Data Access Layer</text>
+  <text class="subtitle" x="125" y="270" text-anchor="middle">(Repositories, ORM)</text>
+
+  <!-- External Services Box -->
+  <rect class="box" x="270" y="220" width="210" height="80"/>
+  <text class="title" x="375" y="250" text-anchor="middle">External Services</text>
+  <text class="subtitle" x="375" y="270" text-anchor="middle">(Payment APIs, Email, etc.)</text>
+</svg>
