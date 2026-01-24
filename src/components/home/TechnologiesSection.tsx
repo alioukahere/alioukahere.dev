@@ -1,9 +1,39 @@
-import { technologies } from '@/data/content'
+import { SiLaravel, SiReact, SiSymfony } from '@icons-pack/react-simple-icons'
 
-export default function TechnologiesSection() {
+interface TechnologiesSectionProps {
+  readonly translations: {
+    title: string
+  }
+  readonly common: {
+    yearsExperience: string
+  }
+}
+
+const technologies = [
+  {
+    name: 'Symfony',
+    icon: SiSymfony,
+    years: 7,
+  },
+  {
+    name: 'React',
+    icon: SiReact,
+    years: 5,
+  },
+  {
+    name: 'Laravel',
+    icon: SiLaravel,
+    years: 3,
+  },
+]
+
+export default function TechnologiesSection({
+  translations,
+  common,
+}: TechnologiesSectionProps) {
   return (
     <section className='section-padding border-t border-gray-200 dark:border-gray-800'>
-      <h2 className='section-title'>Technologies I Work With</h2>
+      <h2 className='section-title'>{translations.title}</h2>
       <div className='grid md:grid-cols-3 gap-8'>
         {technologies.map((tech) => {
           const IconComponent = tech.icon
@@ -23,7 +53,7 @@ export default function TechnologiesSection() {
                     {tech.name}
                   </h3>
                   <span className='text-sm text-gray-600 dark:text-gray-300'>
-                    {tech.years} years experience
+                    {tech.years} {common.yearsExperience}
                   </span>
                 </div>
               </div>

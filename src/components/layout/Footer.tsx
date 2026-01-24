@@ -1,14 +1,23 @@
 import { CONTACT_EMAIL, SOCIAL_LINKS } from '@/constants'
 import { SiGithub, SiX } from '@icons-pack/react-simple-icons'
 import { LinkedinIcon, Mail } from 'lucide-react'
+import type { Locale } from '@/types'
+import { getTranslations } from '@/lib/i18n'
 
-export default function Footer() {
+interface FooterProps {
+  readonly locale: Locale
+}
+
+export default async function Footer({ locale }: FooterProps) {
+  const t = await getTranslations(locale)
+
   return (
     <footer className='border-t border-gray-200 dark:border-gray-800'>
       <div className='content-container py-12'>
         <div className='flex flex-col md:flex-row justify-between items-center gap-6'>
           <div className='text-gray-600 dark:text-gray-400 text-center md:text-left'>
-            © 2024 Mamadou Aliou Diallo. All Rights Reserved.
+            &copy; {new Date().getFullYear()} Mamadou Aliou Diallo.{' '}
+            {t.footer.copyright}
           </div>
           <div className='flex items-center gap-8'>
             <a href={`mailto:${CONTACT_EMAIL}`}>

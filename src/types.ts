@@ -1,5 +1,7 @@
 import { MDXRemoteSerializeResult } from 'next-mdx-remote'
 
+export type Locale = 'en' | 'fr'
+
 export interface Project {
   title: string
   description: string
@@ -16,6 +18,8 @@ export interface BlogPost {
   category: string
   readingTime: string
   image?: string
+  locale: Locale
+  translationSlug?: string
   content:
     | string
     | MDXRemoteSerializeResult<Record<string, unknown>, Record<string, unknown>>

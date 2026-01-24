@@ -1,0 +1,63 @@
+{
+  "common": {
+    "readMore": "Lire la suite",
+    "viewAllPosts": "Voir tous les articles",
+    "viewProject": "Voir le projet",
+    "getInTouch": "Contactez-moi",
+    "yearsExperience": "ans d'experience"
+  },
+  "hero": {
+    "greeting": "Salut, je suis Aliou Diallo",
+    "description": "J'aide les entreprises a créer d'excellentes applications web. En tant que développeur Full Stack, je travaille avec PHP, Python et JavaScript pour créer des solutions adaptées a vos besoins, en utilisant Symfony, Laravel, Django, FastAPI, Flask et React."
+  },
+  "services": {
+    "title": "Comment je peux vous aider",
+    "description": "Je peux travailler avec vous pour construire vos projets web de zero ou intervenir en tant que consultant.",
+    "items": {
+      "backend": {
+        "title": "Backend/APIs",
+        "description": "Je construis le moteur qui alimente vos applications. Que vous ayez besoin d'une API solide pour votre application mobile ou d'un système backend robuste, je vous aiderai a créer une API puissante et maintenable."
+      },
+      "webApps": {
+        "title": "Applications Web",
+        "description": "Besoin d'un site web qui fonctionne parfaitement et se charge rapidement ? Je crée des applications web modernes que vos utilisateurs adoreront utiliser, avec une attention particulière a l’accessibilité."
+      },
+      "consulting": {
+        "title": "Consultance",
+        "description": "Pas sur du côté technique ? Avec plus de 7 ans d'expérience dans la creation d'applications web, je peux aider a guider votre projet dans la bonne direction. Considérez-moi comme votre co-pilote technique."
+      }
+    }
+  },
+  "projects": {
+    "title": "Projets en cours",
+    "items": {
+      "scanifood": {
+        "description": "Une solution intelligente qui aide les restaurants a créer des menus numériques avec des codes QR. Plus besoin d'imprimer des menus papier - scannez et commandez !"
+      },
+      "kaherecode": {
+        "description": "Un espace convivial ou les développeurs peuvent apprendre et partager leurs connaissances. Parce qu'apprendre a coder est mieux quand on s'entraide."
+      }
+    }
+  },
+  "technologies": {
+    "title": "Technologies avec lesquelles je travaille"
+  },
+  "blog": {
+    "title": "Blog & Tutoriels",
+    "sectionTitle": "Derniers articles",
+    "description": "Je partage des conseils pratiques et des tutoriels sur le développement PHP, Python et JavaScript. Vous trouverez ici des solutions concretes aux défis courants, les meilleures pratiques de codage et les leçons tirées de 7 ans d'expérience.",
+    "metaTitle": "Développement PHP, Python & JavaScript | Mamadou Aliou Diallo",
+    "metaDescription": "Tutoriels pratiques et conseils sur le développement PHP, Python et JavaScript. Apprenez Laravel, Symfony, Django, FastAPI, Flask et React a travers des exemples concrets."
+  },
+  "footer": {
+    "copyright": "Tous droits réservés."
+  },
+  "translationBanner": {
+    "message": "Vous pouvez aussi lire cet article en",
+    "language": "Anglais"
+  },
+  "language": {
+    "en": "Anglais",
+    "fr": "Français"
+  }
+}

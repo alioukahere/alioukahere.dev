@@ -1,9 +1,38 @@
-import { projects } from '@/data/content'
+interface ProjectsSectionProps {
+  readonly translations: {
+    title: string
+    items: {
+      scanifood: { description: string }
+      kaherecode: { description: string }
+    }
+  }
+  readonly common: {
+    viewProject: string
+  }
+}
 
-export default function ProjectsSection() {
+const projects = [
+  {
+    key: 'scanifood' as const,
+    title: 'ScaniFood',
+    link: 'https://scanifood.com',
+    tech: ['Symfony', 'React', 'Tailwind'],
+  },
+  {
+    key: 'kaherecode' as const,
+    title: 'Kaherecode',
+    link: 'https://kahere.academy',
+    tech: ['Symfony', 'PHP8', 'Tailwind'],
+  },
+]
+
+export default function ProjectsSection({
+  translations,
+  common,
+}: ProjectsSectionProps) {
   return (
     <section className='section-padding border-t border-gray-200 dark:border-gray-800'>
-      <h2 className='section-title'>Current Projects</h2>
+      <h2 className='section-title'>{translations.title}</h2>
       <div className='grid md:grid-cols-2 gap-8'>
         {projects.map((project) => (
           <div
@@ -17,7 +46,7 @@ export default function ProjectsSection() {
             </h3>
 
             <p className='text-gray-600 dark:text-gray-300 mb-6 leading-relaxed'>
-              {project.description}
+              {translations.items[project.key].description}
             </p>
 
             <div className='flex flex-wrap gap-2 mb-6'>
@@ -36,9 +65,9 @@ export default function ProjectsSection() {
               href={project.link}
               className='font-medium inline-flex items-center duration-200 mt-auto group'
             >
-              View Project {` `}
+              {common.viewProject}{' '}
               <span className='ml-1 transform transition-transform group-hover:translate-x-0.5'>
-                →
+                &rarr;
               </span>
             </a>
           </div>
