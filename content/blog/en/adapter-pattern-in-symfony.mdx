@@ -1,0 +1,1017 @@
+---
+title: "The Adapter Pattern in Symfony: Creating Flexible Payment Integrations"
+publishedAt: '2026-01-27'
+excerpt: "The Adapter pattern allows incompatible interfaces to work together by creating a unified interface. Learn how to use it to build flexible, extensible payment gateway integrations in Symfony."
+category: 'Design Patterns'
+---
+
+In my previous article on [Building a Robust Service Layer in Symfony](/blog/building-a-robust-service-layer-in-symfony), we transformed a chaotic payment controller into a clean, focused service. But I ended that article with an honest admission: our `PaymentService` still had problems.
+
+Remember that `match` statement?
+
+```php
+$result = match ($paymentMethod) {
+    'paypal' => $this->processPayPalPayment($amount),
+    'stripe' => $this->processStripePayment($amount),
+    'wave' => $this->processWavePayment($amount),
+    'orange' => $this->processOrangeMoneyPayment($amount),
+};
+```
+
+Every time we need to add a new payment gateway, we have to modify this service. That's not great. Today, we're going to fix it using the Adapter Pattern.
+
+## What is the Adapter Pattern?
+
+Think of the Adapter Pattern like a power adapter when you travel internationally. Your laptop has a specific plug type, but the wall outlet in another country has a different shape. The power adapter sits between them, making two incompatible interfaces work together without modifying either one.
+
+// include image of a power adapter
+
+In software terms, the Adapter Pattern creates a bridge between your application's expected interface and the various third-party implementations you need to integrate with.
+
+> The Adapter Pattern converts the interface of a class into another interface that clients expect. It lets classes work together that couldn't otherwise because of incompatible interfaces.
+
+Here are the key components:
+
+- **Target Interface**: The interface your application expects (what we'll create)
+- **Adapter**: The class that implements the target interface and wraps the adaptee
+- **Adaptee**: The existing class with an incompatible interface (Stripe SDK, Wave API, etc.)
+- **Client**: The code that uses the target interface (our PaymentService)
+
+![Adapter Pattern Architecture](/images/blog/adapter-pattern-architecture.svg)
+
+The beauty of this pattern is that your client code (PaymentService) only knows about the target interface. It doesn't care whether it's talking to Stripe, Wave, or any other payment gateway. The adapters handle all the translation.
+
+## Why Use the Adapter Pattern?
+
+The Adapter Pattern helps us follow several important software design principles:
+
+**Single Responsibility Principle**: Each adapter is responsible for one thing: translating between your interface and a specific external service. The Stripe adapter only knows about Stripe. The Wave adapter only knows about Wave.
+
+**Open/Closed Principle**: This is the big one for our payment service. Your code should be open for extension but closed for modification. With adapters, adding a new payment gateway means creating a new adapter class, not touching existing code.
+
+**Dependency Inversion**: High-level modules (PaymentService) shouldn't depend on low-level modules (Stripe SDK, Wave API). Both should depend on abstractions (PaymentGatewayInterface).
+
+**Testability**: Testing a service that directly calls Stripe's API requires mocking HTTP requests or using Stripe's test mode. Testing a service that depends on `PaymentGatewayInterface`? Just create a simple mock that implements the interface.
+
+**Flexibility**: Need to switch from PayPal to Stripe? Create a new adapter. Need to use a different payment provider for different regions? Easy. Your core business logic never changes.
+
+## When to Use the Adapter Pattern
+
+The Adapter Pattern is particularly valuable when:
+
+- **You're integrating multiple third-party services that serve the same purpose**. Payment gateways, shipping carriers, SMS providers, email services, translation providers, these are all perfect candidates.
+- **You're wrapping legacy code or external libraries** to work with your modern application design.
+- **You want to isolate your business logic from vendor-specific implementations**. If Stripe changes their API tomorrow, you only update one adapter, not your entire codebase.
+- **You need to normalize data from different sources** into a consistent format for your application.
+
+However, don't reach for this pattern when you only have one implementation with no plans for more. Adding an adapter for a single service just creates unnecessary indirection. The pattern shines when you have (or anticipate) multiple implementations.
+
+## The Problem: Where We Left Off
+
+Let's revisit the problems we identified with our `PaymentService` at the end of the previous article:
+
+```php
+class PaymentService
+{
+    public function __construct(
+        private readonly EntityManagerInterface $em,
+        private readonly HttpClientInterface $httpClient,
+        private readonly MailerInterface $mailer,
+        private readonly LoggerInterface $logger,
+        private readonly string $paypalClientId,
+        private readonly string $paypalClientSecret,
+        private readonly string $stripeSecretKey,
+        private readonly string $waveApiKey,
+        private readonly string $orangeApiKey,
+    ) {}
+
+    public function processPayment(float $amount, string $paymentMethod, string $userEmail): array
+    {
+        $this->validatePayment($amount, $paymentMethod);
+
+        $result = match ($paymentMethod) {
+            'paypal' => $this->processPayPalPayment($amount),
+            'stripe' => $this->processStripePayment($amount),
+            'wave' => $this->processWavePayment($amount),
+            'orange' => $this->processOrangeMoneyPayment($amount),
+        };
+
+        // ... rest of the method
+    }
+
+    private function processPayPalPayment(float $amount): array { /* ... */ }
+    private function processStripePayment(float $amount): array { /* ... */ }
+    private function processWavePayment(float $amount): array { /* ... */ }
+    private function processOrangeMoneyPayment(float $amount): array { /* ... */ }
+}
+```
+
+Three problems stand out:
+
+1. **The service knows too much**: It contains implementation details for every payment gateway, PayPal OAuth flows, Stripe session creation, Wave's API quirks, and Orange Money's authentication.
+
+2. **Adding new gateways means modifying the service**: Want to add CinetPay (another popular West African payment gateway)? You need to add a new private method, update the `match` statement, and add another API key to the constructor.
+
+3. **Testing is painful**: To test the payment flow, you either need to mock the HTTP client for each gateway's specific requests or use real API calls in test mode.
+
+Let's imagine we need to add CinetPay. Here's what we'd have to change:
+
+```php
+class PaymentService
+{
+    private const SUPPORTED_METHODS = ['paypal', 'stripe', 'wave', 'orange', 'cinetpay']; // Modified
+
+    public function __construct(
+        // ... existing dependencies
+        private readonly string $cinetpayApiKey,     // Added
+        private readonly string $cinetpaySiteId,     // Added
+    ) {}
+
+    public function processPayment(float $amount, string $paymentMethod, string $userEmail): array
+    {
+        // ...
+
+        $result = match ($paymentMethod) {
+            'paypal' => $this->processPayPalPayment($amount),
+            'stripe' => $this->processStripePayment($amount),
+            'wave' => $this->processWavePayment($amount),
+            'orange' => $this->processOrangeMoneyPayment($amount),
+            'cinetpay' => $this->processCinetPayPayment($amount),  // Added
+        };
+
+        // ...
+    }
+
+    // Added: 50+ lines of CinetPay-specific code
+    private function processCinetPayPayment(float $amount): array
+    {
+        // CinetPay API implementation...
+    }
+}
+```
+
+We've modified the supported methods constant, added new constructor parameters, updated the match statement, and added a new method. That's four changes to existing code for one new payment gateway. And each change is a potential bug introduction.
+
+Let's fix this with the Adapter Pattern.
+
+## Implementing the Adapter Pattern
+
+### Step 1: Define the Target Interface
+
+First, we need to define what our application expects from any payment gateway. This is our target interface:
+
+```php
+<?php
+// src/PaymentGateway/PaymentGatewayInterface.php
+namespace App\PaymentGateway;
+
+use App\PaymentGateway\DTO\PaymentRequest;
+use App\PaymentGateway\DTO\PaymentResponse;
+
+interface PaymentGatewayInterface
+{
+    /**
+     * Returns the unique identifier for this gateway (e.g., 'stripe', 'wave')
+     */
+    public function getIdentifier(): string;
+
+    /**
+     * Initiates a payment and returns the checkout information
+     */
+    public function createPayment(PaymentRequest $request): PaymentResponse;
+
+    /**
+     * Verifies a payment status with the gateway
+     */
+    public function verifyPayment(string $externalId): PaymentResponse;
+}
+```
+
+Notice that we're using DTOs (Data Transfer Objects) for the request and response. This normalizes the data format across all gateways:
+
+```php
+<?php
+// src/PaymentGateway/DTO/PaymentRequest.php
+namespace App\PaymentGateway\DTO;
+
+readonly class PaymentRequest
+{
+    public function __construct(
+        public float $amount,
+        public string $currency,
+        public string $description,
+        public string $successUrl,
+        public string $cancelUrl,
+        public ?string $customerEmail = null,
+        public array $metadata = [],
+    ) {}
+}
+```
+
+```php
+<?php
+// src/PaymentGateway/DTO/PaymentResponse.php
+namespace App\PaymentGateway\DTO;
+
+use App\Enum\PaymentStatus;
+
+readonly class PaymentResponse
+{
+    public function __construct(
+        public bool $success,
+        public ?string $externalId = null,
+        public ?string $checkoutUrl = null,
+        public PaymentStatus $status = PaymentStatus::PENDING,
+        public ?string $errorMessage = null,
+        public array $rawResponse = [],
+    ) {}
+
+    public static function failure(string $message, array $rawResponse = []): self
+    {
+        return new self(
+            success: false,
+            errorMessage: $message,
+            status: PaymentStatus::FAILED,
+            rawResponse: $rawResponse,
+        );
+    }
+}
+```
+
+The DTOs provide a clean contract. Every adapter receives the same `PaymentRequest` and returns the same `PaymentResponse`, regardless of what the underlying API looks like.
+
+### Step 2: Create Adapters for Each Payment Gateway
+
+Now let's create adapters that implement our interface. Each adapter handles the translation between our clean interface and the messy reality of each payment provider's API.
+
+**Stripe Adapter:**
+
+```php
+<?php
+// src/PaymentGateway/Adapter/StripeAdapter.php
+namespace App\PaymentGateway\Adapter;
+
+use App\Enum\PaymentStatus;
+use App\PaymentGateway\DTO\PaymentRequest;
+use App\PaymentGateway\DTO\PaymentResponse;
+use App\PaymentGateway\PaymentGatewayInterface;
+use Stripe\Checkout\Session;
+use Stripe\Exception\ApiErrorException;
+use Stripe\Stripe;
+
+class StripeAdapter implements PaymentGatewayInterface
+{
+    public function __construct(
+        private readonly string $secretKey,
+    ) {
+        Stripe::setApiKey($this->secretKey);
+    }
+
+    public function getIdentifier(): string
+    {
+        return 'stripe';
+    }
+
+    public function createPayment(PaymentRequest $request): PaymentResponse
+    {
+        try {
+            $session = Session::create([
+                'payment_method_types' => ['card'],
+                'line_items' => [[
+                    'price_data' => [
+                        'currency' => strtolower($request->currency),
+                        'product_data' => [
+                            'name' => $request->description,
+                        ],
+                        'unit_amount' => (int) ($request->amount * 100), // Stripe uses cents
+                    ],
+                    'quantity' => 1,
+                ]],
+                'mode' => 'payment',
+                'success_url' => $request->successUrl,
+                'cancel_url' => $request->cancelUrl,
+                'customer_email' => $request->customerEmail,
+                'metadata' => $request->metadata,
+            ]);
+
+            return new PaymentResponse(
+                success: true,
+                externalId: $session->id,
+                checkoutUrl: $session->url,
+                status: PaymentStatus::PENDING,
+                rawResponse: $session->toArray(),
+            );
+        } catch (ApiErrorException $e) {
+            return PaymentResponse::failure(
+                message: $e->getMessage(),
+                rawResponse: ['error' => $e->getError()?->toArray()],
+            );
+        }
+    }
+
+    public function verifyPayment(string $externalId): PaymentResponse
+    {
+        try {
+            $session = Session::retrieve($externalId);
+
+            $status = match ($session->payment_status) {
+                'paid' => PaymentStatus::COMPLETED,
+                'unpaid' => PaymentStatus::PENDING,
+                default => PaymentStatus::FAILED,
+            };
+
+            return new PaymentResponse(
+                success: $status === PaymentStatus::COMPLETED,
+                externalId: $session->id,
+                status: $status,
+                rawResponse: $session->toArray(),
+            );
+        } catch (ApiErrorException $e) {
+            return PaymentResponse::failure($e->getMessage());
+        }
+    }
+}
+```
+
+**Wave Adapter:**
+
+```php
+<?php
+// src/PaymentGateway/Adapter/WaveAdapter.php
+namespace App\PaymentGateway\Adapter;
+
+use App\Enum\PaymentStatus;
+use App\PaymentGateway\DTO\PaymentRequest;
+use App\PaymentGateway\DTO\PaymentResponse;
+use App\PaymentGateway\PaymentGatewayInterface;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
+use Symfony\Contracts\HttpClient\Exception\ExceptionInterface;
+
+class WaveAdapter implements PaymentGatewayInterface
+{
+    private const API_BASE_URL = 'https://api.wave.com/v1';
+
+    public function __construct(
+        private readonly HttpClientInterface $httpClient,
+        private readonly string $apiKey,
+    ) {}
+
+    public function getIdentifier(): string
+    {
+        return 'wave';
+    }
+
+    public function createPayment(PaymentRequest $request): PaymentResponse
+    {
+        try {
+            $response = $this->httpClient->request('POST', self::API_BASE_URL . '/checkout/sessions', [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $this->apiKey,
+                    'Content-Type' => 'application/json',
+                ],
+                'json' => [
+                    'amount' => (string) $request->amount, // Wave expects string
+                    'currency' => $request->currency,
+                    'error_url' => $request->cancelUrl,
+                    'success_url' => $request->successUrl,
+                    'client_reference' => $request->metadata['reference'] ?? uniqid('wave_'),
+                ],
+            ]);
+
+            $data = $response->toArray();
+
+            return new PaymentResponse(
+                success: true,
+                externalId: $data['id'],
+                checkoutUrl: $data['wave_launch_url'],
+                status: PaymentStatus::PENDING,
+                rawResponse: $data,
+            );
+        } catch (ExceptionInterface $e) {
+            return PaymentResponse::failure(
+                message: 'Wave API error: ' . $e->getMessage(),
+            );
+        }
+    }
+
+    public function verifyPayment(string $externalId): PaymentResponse
+    {
+        try {
+            $response = $this->httpClient->request('GET', self::API_BASE_URL . '/checkout/sessions/' . $externalId, [
+                'headers' => [
+                    'Authorization' => 'Bearer ' . $this->apiKey,
+                ],
+            ]);
+
+            $data = $response->toArray();
+
+            $status = match ($data['payment_status'] ?? null) {
+                'succeeded' => PaymentStatus::COMPLETED,
+                'pending' => PaymentStatus::PENDING,
+                'failed', 'cancelled' => PaymentStatus::FAILED,
+                default => PaymentStatus::PENDING,
+            };
+
+            return new PaymentResponse(
+                success: $status === PaymentStatus::COMPLETED,
+                externalId: $data['id'],
+                status: $status,
+                rawResponse: $data,
+            );
+        } catch (ExceptionInterface $e) {
+            return PaymentResponse::failure($e->getMessage());
+        }
+    }
+}
+```
+
+Notice how each adapter:
+- Implements the same interface
+- Handles all the vendor-specific logic internally
+- Translates between the vendor's data format and our DTOs
+- Catches vendor-specific exceptions and converts them to our response format
+
+The `PaymentService` doesn't need to know that Stripe uses cents while Wave uses full amounts, or that Wave returns `wave_launch_url` while Stripe returns `url`. The adapters handle all of that.
+
+### Step 3: Create a Payment Gateway Registry
+
+Now we need a way to select the right adapter at runtime. We'll create a registry that holds all available adapters and retrieves them by identifier:
+
+```php
+<?php
+// src/PaymentGateway/PaymentGatewayRegistry.php
+namespace App\PaymentGateway;
+
+use App\Exception\PaymentGatewayNotFoundException;
+
+class PaymentGatewayRegistry
+{
+    /**
+     * @var array<string, PaymentGatewayInterface>
+     */
+    private array $gateways = [];
+
+    /**
+     * @param iterable<PaymentGatewayInterface> $gateways
+     */
+    public function __construct(iterable $gateways)
+    {
+        foreach ($gateways as $gateway) {
+            $this->gateways[$gateway->getIdentifier()] = $gateway;
+        }
+    }
+
+    public function get(string $identifier): PaymentGatewayInterface
+    {
+        if (!isset($this->gateways[$identifier])) {
+            throw new PaymentGatewayNotFoundException(
+                sprintf('Payment gateway "%s" not found. Available: %s',
+                    $identifier,
+                    implode(', ', array_keys($this->gateways))
+                )
+            );
+        }
+
+        return $this->gateways[$identifier];
+    }
+
+    public function has(string $identifier): bool
+    {
+        return isset($this->gateways[$identifier]);
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getAvailableGateways(): array
+    {
+        return array_keys($this->gateways);
+    }
+}
+```
+
+Now we configure Symfony to automatically inject all adapters into the registry using tagged services:
+
+```yaml
+# config/services.yaml
+services:
+    # Auto-tag all classes implementing PaymentGatewayInterface
+    _instanceof:
+        App\PaymentGateway\PaymentGatewayInterface:
+            tags: ['app.payment_gateway']
+
+    # Configure the registry to receive all tagged services
+    App\PaymentGateway\PaymentGatewayRegistry:
+        arguments:
+            $gateways: !tagged_iterator app.payment_gateway
+
+    # Configure individual adapters with their credentials
+    App\PaymentGateway\Adapter\StripeAdapter:
+        arguments:
+            $secretKey: '%env(STRIPE_SECRET_KEY)%'
+
+    App\PaymentGateway\Adapter\WaveAdapter:
+        arguments:
+            $apiKey: '%env(WAVE_API_KEY)%'
+```
+
+The `!tagged_iterator` directive tells Symfony to collect all services tagged with `app.payment_gateway` and inject them as an iterable. When the registry is constructed, it automatically has access to all available payment adapters.
+
+### Step 4: Refactor the PaymentService
+
+Now comes the satisfying part. Look how clean our `PaymentService` becomes:
+
+```php
+<?php
+// src/Service/PaymentService.php
+namespace App\Service;
+
+use App\Entity\Payment;
+use App\Enum\PaymentStatus;
+use App\Exception\InvalidPaymentException;
+use App\PaymentGateway\DTO\PaymentRequest;
+use App\PaymentGateway\PaymentGatewayRegistry;
+use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\Email;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+
+class PaymentService
+{
+    public function __construct(
+        private readonly PaymentGatewayRegistry $gatewayRegistry,
+        private readonly EntityManagerInterface $em,
+        private readonly MailerInterface $mailer,
+        private readonly LoggerInterface $logger,
+        private readonly UrlGeneratorInterface $urlGenerator,
+    ) {}
+
+    public function processPayment(
+        float $amount,
+        string $currency,
+        string $paymentMethod,
+        string $userEmail,
+        string $description = 'Payment',
+    ): array {
+        // Validate amount
+        if ($amount <= 0) {
+            throw new InvalidPaymentException('Amount must be greater than zero');
+        }
+
+        // Get the appropriate gateway (throws if not found)
+        $gateway = $this->gatewayRegistry->get($paymentMethod);
+
+        // Create the payment request
+        $request = new PaymentRequest(
+            amount: $amount,
+            currency: $currency,
+            description: $description,
+            successUrl: $this->urlGenerator->generate('payment_success', [], UrlGeneratorInterface::ABSOLUTE_URL),
+            cancelUrl: $this->urlGenerator->generate('payment_cancel', [], UrlGeneratorInterface::ABSOLUTE_URL),
+            customerEmail: $userEmail,
+        );
+
+        // Process payment through the adapter
+        $response = $gateway->createPayment($request);
+
+        if (!$response->success) {
+            $this->logger->error('Payment creation failed', [
+                'gateway' => $paymentMethod,
+                'error' => $response->errorMessage,
+            ]);
+
+            throw new InvalidPaymentException($response->errorMessage ?? 'Payment creation failed');
+        }
+
+        // Save to database
+        $payment = $this->createPaymentEntity($amount, $currency, $paymentMethod, $response->externalId);
+
+        // Send notification
+        $this->sendPaymentNotification($userEmail, $payment);
+
+        $this->logger->info('Payment initiated', [
+            'payment_id' => $payment->getId(),
+            'gateway' => $paymentMethod,
+            'external_id' => $response->externalId,
+            'amount' => $amount,
+            'currency' => $currency,
+        ]);
+
+        return [
+            'success' => true,
+            'payment_id' => $payment->getId(),
+            'redirect_url' => $response->checkoutUrl,
+        ];
+    }
+
+    public function verifyPayment(int $paymentId): Payment
+    {
+        $payment = $this->em->getRepository(Payment::class)->find($paymentId);
+
+        if (!$payment) {
+            throw new InvalidPaymentException('Payment not found');
+        }
+
+        $gateway = $this->gatewayRegistry->get($payment->getPaymentMethod());
+        $response = $gateway->verifyPayment($payment->getExternalId());
+
+        $payment->setStatus($response->status);
+        $this->em->flush();
+
+        return $payment;
+    }
+
+    private function createPaymentEntity(
+        float $amount,
+        string $currency,
+        string $method,
+        string $externalId
+    ): Payment {
+        $payment = new Payment();
+        $payment->setAmount($amount);
+        $payment->setCurrency($currency);
+        $payment->setPaymentMethod($method);
+        $payment->setExternalId($externalId);
+        $payment->setStatus(PaymentStatus::PENDING);
+
+        $this->em->persist($payment);
+        $this->em->flush();
+
+        return $payment;
+    }
+
+    private function sendPaymentNotification(string $email, Payment $payment): void
+    {
+        $message = (new Email())
+            ->to($email)
+            ->subject('Payment Processing')
+            ->text(sprintf(
+                'Your payment of %s %s is being processed.',
+                $payment->getAmount(),
+                $payment->getCurrency()
+            ));
+
+        $this->mailer->send($message);
+    }
+}
+```
+
+Look at what we've achieved:
+
+- **No more `match` statement**: The registry handles gateway selection
+- **No more gateway-specific methods**: Each adapter encapsulates its own logic
+- **No more API keys in the constructor**: Each adapter manages its own configuration
+- **The service knows nothing about Stripe, Wave, or any other provider**: It only knows about `PaymentGatewayInterface`
+
+The `PaymentService` is now truly focused on business logic: validating input, orchestrating the payment flow, persisting data, and sending notifications. The payment gateway details are completely abstracted away.
+
+## Adding a New Payment Gateway
+
+Here's where the Adapter Pattern really shines. Let's add CinetPay support.
+
+```php
+<?php
+// src/PaymentGateway/Adapter/CinetPayAdapter.php
+namespace App\PaymentGateway\Adapter;
+
+use App\Enum\PaymentStatus;
+use App\PaymentGateway\DTO\PaymentRequest;
+use App\PaymentGateway\DTO\PaymentResponse;
+use App\PaymentGateway\PaymentGatewayInterface;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
+use Symfony\Contracts\HttpClient\Exception\ExceptionInterface;
+
+class CinetPayAdapter implements PaymentGatewayInterface
+{
+    private const API_BASE_URL = 'https://api-checkout.cinetpay.com/v2';
+
+    public function __construct(
+        private readonly HttpClientInterface $httpClient,
+        private readonly string $apiKey,
+        private readonly string $siteId,
+    ) {}
+
+    public function getIdentifier(): string
+    {
+        return 'cinetpay';
+    }
+
+    public function createPayment(PaymentRequest $request): PaymentResponse
+    {
+        try {
+            $transactionId = uniqid('cp_');
+
+            $response = $this->httpClient->request('POST', self::API_BASE_URL . '/payment', [
+                'json' => [
+                    'apikey' => $this->apiKey,
+                    'site_id' => $this->siteId,
+                    'transaction_id' => $transactionId,
+                    'amount' => (int) $request->amount,
+                    'currency' => $request->currency,
+                    'description' => $request->description,
+                    'return_url' => $request->successUrl,
+                    'notify_url' => $request->metadata['webhook_url'] ?? $request->successUrl,
+                    'customer_email' => $request->customerEmail,
+                    'channels' => 'ALL',
+                ],
+            ]);
+
+            $data = $response->toArray();
+
+            if (($data['code'] ?? '') !== '201') {
+                return PaymentResponse::failure(
+                    message: $data['message'] ?? 'CinetPay error',
+                    rawResponse: $data,
+                );
+            }
+
+            return new PaymentResponse(
+                success: true,
+                externalId: $transactionId,
+                checkoutUrl: $data['data']['payment_url'],
+                status: PaymentStatus::PENDING,
+                rawResponse: $data,
+            );
+        } catch (ExceptionInterface $e) {
+            return PaymentResponse::failure('CinetPay API error: ' . $e->getMessage());
+        }
+    }
+
+    public function verifyPayment(string $externalId): PaymentResponse
+    {
+        try {
+            $response = $this->httpClient->request('POST', self::API_BASE_URL . '/payment/check', [
+                'json' => [
+                    'apikey' => $this->apiKey,
+                    'site_id' => $this->siteId,
+                    'transaction_id' => $externalId,
+                ],
+            ]);
+
+            $data = $response->toArray();
+
+            $status = match ($data['data']['status'] ?? null) {
+                'ACCEPTED' => PaymentStatus::COMPLETED,
+                'PENDING' => PaymentStatus::PENDING,
+                default => PaymentStatus::FAILED,
+            };
+
+            return new PaymentResponse(
+                success: $status === PaymentStatus::COMPLETED,
+                externalId: $externalId,
+                status: $status,
+                rawResponse: $data,
+            );
+        } catch (ExceptionInterface $e) {
+            return PaymentResponse::failure($e->getMessage());
+        }
+    }
+}
+```
+
+And configure it:
+
+```yaml
+# config/services.yaml
+services:
+    App\PaymentGateway\Adapter\CinetPayAdapter:
+        arguments:
+            $apiKey: '%env(CINETPAY_API_KEY)%'
+            $siteId: '%env(CINETPAY_SITE_ID)%'
+```
+
+That's it. No changes to `PaymentService`. No changes to existing adapters. No changes to the registry. The new adapter is automatically picked up by Symfony's tagged services and made available through the registry.
+
+> This is the Open/Closed Principle in action: our system is open for extension (we can add new gateways) but closed for modification (we don't touch existing code).
+
+## Testing Adapters in Isolation
+
+One of the major benefits of the Adapter Pattern is testability. Each adapter can be tested in isolation, and the `PaymentService` can be tested with mock adapters.
+
+### Testing an Adapter
+
+Here's how you might test the `WaveAdapter`:
+
+```php
+<?php
+// tests/PaymentGateway/Adapter/WaveAdapterTest.php
+namespace App\Tests\PaymentGateway\Adapter;
+
+use App\Enum\PaymentStatus;
+use App\PaymentGateway\Adapter\WaveAdapter;
+use App\PaymentGateway\DTO\PaymentRequest;
+use PHPUnit\Framework\TestCase;
+use Symfony\Component\HttpClient\MockHttpClient;
+use Symfony\Component\HttpClient\Response\MockResponse;
+
+class WaveAdapterTest extends TestCase
+{
+    public function testCreatePaymentSuccess(): void
+    {
+        $mockResponse = new MockResponse(json_encode([
+            'id' => 'wave_123',
+            'wave_launch_url' => 'https://pay.wave.com/c/wave_123',
+            'payment_status' => 'pending',
+        ]));
+
+        $httpClient = new MockHttpClient($mockResponse);
+        $adapter = new WaveAdapter($httpClient, 'test_api_key');
+
+        $request = new PaymentRequest(
+            amount: 1000.00,
+            currency: 'XOF',
+            description: 'Test payment',
+            successUrl: 'https://example.com/success',
+            cancelUrl: 'https://example.com/cancel',
+        );
+
+        $response = $adapter->createPayment($request);
+
+        $this->assertTrue($response->success);
+        $this->assertEquals('wave_123', $response->externalId);
+        $this->assertEquals('https://pay.wave.com/c/wave_123', $response->checkoutUrl);
+        $this->assertEquals(PaymentStatus::PENDING, $response->status);
+    }
+
+    public function testCreatePaymentHandlesApiError(): void
+    {
+        $mockResponse = new MockResponse('', ['http_code' => 500]);
+
+        $httpClient = new MockHttpClient($mockResponse);
+        $adapter = new WaveAdapter($httpClient, 'test_api_key');
+
+        $request = new PaymentRequest(
+            amount: 1000.00,
+            currency: 'XOF',
+            description: 'Test payment',
+            successUrl: 'https://example.com/success',
+            cancelUrl: 'https://example.com/cancel',
+        );
+
+        $response = $adapter->createPayment($request);
+
+        $this->assertFalse($response->success);
+        $this->assertNotNull($response->errorMessage);
+    }
+
+    public function testGetIdentifier(): void
+    {
+        $httpClient = new MockHttpClient();
+        $adapter = new WaveAdapter($httpClient, 'test_api_key');
+
+        $this->assertEquals('wave', $adapter->getIdentifier());
+    }
+}
+```
+
+### Testing the PaymentService
+
+Testing the `PaymentService` is now straightforward because we can inject a mock adapter:
+
+```php
+<?php
+// tests/Service/PaymentServiceTest.php
+namespace App\Tests\Service;
+
+use App\Enum\PaymentStatus;
+use App\PaymentGateway\DTO\PaymentRequest;
+use App\PaymentGateway\DTO\PaymentResponse;
+use App\PaymentGateway\PaymentGatewayInterface;
+use App\PaymentGateway\PaymentGatewayRegistry;
+use App\Service\PaymentService;
+use Doctrine\ORM\EntityManagerInterface;
+use PHPUnit\Framework\TestCase;
+use Psr\Log\NullLogger;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+
+class PaymentServiceTest extends TestCase
+{
+    public function testProcessPaymentSuccess(): void
+    {
+        // Create a mock adapter
+        $mockAdapter = $this->createMock(PaymentGatewayInterface::class);
+        $mockAdapter->method('getIdentifier')->willReturn('mock');
+        $mockAdapter->method('createPayment')->willReturn(new PaymentResponse(
+            success: true,
+            externalId: 'ext_123',
+            checkoutUrl: 'https://checkout.example.com',
+            status: PaymentStatus::PENDING,
+        ));
+
+        // Create registry with mock adapter
+        $registry = new PaymentGatewayRegistry([$mockAdapter]);
+
+        // Create service with mock dependencies
+        $service = new PaymentService(
+            gatewayRegistry: $registry,
+            em: $this->createConfiguredEntityManager(),
+            mailer: $this->createMock(MailerInterface::class),
+            logger: new NullLogger(),
+            urlGenerator: $this->createConfiguredUrlGenerator(),
+        );
+
+        $result = $service->processPayment(
+            amount: 100.00,
+            currency: 'USD',
+            paymentMethod: 'mock',
+            userEmail: 'test@example.com',
+        );
+
+        $this->assertTrue($result['success']);
+        $this->assertEquals('https://checkout.example.com', $result['redirect_url']);
+    }
+
+    private function createConfiguredEntityManager(): EntityManagerInterface
+    {
+        $em = $this->createMock(EntityManagerInterface::class);
+        $em->method('persist');
+        $em->method('flush');
+
+        return $em;
+    }
+
+    private function createConfiguredUrlGenerator(): UrlGeneratorInterface
+    {
+        $generator = $this->createMock(UrlGeneratorInterface::class);
+        $generator->method('generate')->willReturn('https://example.com/callback');
+
+        return $generator;
+    }
+}
+```
+
+Notice how we don't need to mock HTTP clients or deal with real API credentials. We simply create a mock that implements `PaymentGatewayInterface` and returns the responses we want to test against.
+
+## Best Practices
+
+Here are some guidelines for implementing the Adapter Pattern effectively:
+
+### Keep Adapters Focused
+
+Each adapter should only handle the translation between your interface and one external service. Don't put business logic in adapters. They should be pure translators.
+
+```php
+// Good: Adapter only translates
+public function createPayment(PaymentRequest $request): PaymentResponse
+{
+    $data = $this->callExternalApi($request);
+    return $this->translateResponse($data);
+}
+
+// Bad: Adapter contains business logic
+public function createPayment(PaymentRequest $request): PaymentResponse
+{
+    if ($request->amount > 10000) {
+        // This belongs in the service layer, not the adapter
+        throw new Exception('Amount exceeds limit');
+    }
+    // ...
+}
+```
+
+### Use DTOs for Data Transfer
+
+DTOs create a clean boundary between your application and external services. They make your contracts explicit and provide a single place to validate and transform data.
+
+### Handle Errors Gracefully
+
+Adapters should catch vendor-specific exceptions and convert them to a consistent response format. Your application shouldn't need to know about `Stripe\Exception\ApiErrorException` or Wave's HTTP error responses.
+
+### Configuration via Environment Variables
+
+Keep all API credentials in environment variables. This makes your adapters portable across environments and keeps secrets out of your codebase.
+
+```yaml
+services:
+    App\PaymentGateway\Adapter\StripeAdapter:
+        arguments:
+            $secretKey: '%env(STRIPE_SECRET_KEY)%'
+```
+
+## Adapter vs Strategy Pattern
+
+You might wonder when to use the Adapter Pattern versus the Strategy Pattern, as they can look similar. Here's the key difference:
+
+- **Adapter Pattern**: Use when you need to make incompatible interfaces work together. The adapters convert external interfaces to match your expected interface. Think: "I have different APIs that need to look the same."
+
+- **Strategy Pattern**: Use when you have multiple algorithms that can be swapped at runtime. The strategies implement the same interface from the start. Think: "I have different ways to do the same thing."
+
+In our payment example, we use adapters because Stripe, Wave, and CinetPay have fundamentally different APIs that we're adapting to a common interface. If we were implementing different pricing strategies (flat rate, percentage, tiered), we'd use the Strategy Pattern because those algorithms would naturally share an interface.
+
+## Conclusion
+
+We've come a long way from that initial fat controller. Let's recap the journey:
+
+1. **Fat Controller**: All payment logic, HTTP handling, and gateway-specific code in one massive controller
+2. **Service Layer**: Extracted business logic into a `PaymentService`, but still had gateway-specific methods and that troublesome `match` statement
+3. **Adapter Pattern**: Created a unified interface, individual adapters for each gateway, and a registry to tie it all together
+
+Our `PaymentService` is now completely decoupled from any specific payment provider. Adding a new gateway is as simple as creating a new adapter class. Testing is straightforward with mock implementations. And most importantly, our code follows solid design principles.
+
+The Adapter Pattern is one of the most practical patterns you'll use when building integrations. Whether it's payment gateways, shipping carriers, SMS providers, or any other external service, the pattern remains the same: define what you need, create adapters that provide it, and let your business logic remain blissfully unaware of the implementation details.
+
+In the next article, we'll explore the Repository Pattern and see how it can further improve our application's architecture by abstracting data access.
+
+Until next time, happy coding!
