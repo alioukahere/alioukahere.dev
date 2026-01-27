@@ -35,7 +35,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const blogUrls: MetadataRoute.Sitemap = []
 
   for (const locale of locales) {
-    const posts = await getAllPosts(locale as Locale)
+    const posts = await getAllPosts(locale as Locale, false)
 
     for (const post of posts) {
       blogUrls.push({

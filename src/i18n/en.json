@@ -56,6 +56,9 @@
     "message": "This article is also available in",
     "language": "French"
   },
+  "fallbackBanner": {
+    "message": "This article is only available in"
+  },
   "language": {
     "en": "English",
     "fr": "French"

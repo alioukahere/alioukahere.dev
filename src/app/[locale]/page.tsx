@@ -72,6 +72,7 @@ export default async function Home({ params }: HomeProps) {
         translations={t.blog}
         common={t.common}
         locale={validLocale}
+        languageNames={t.language}
       />
       <TechnologiesSection translations={t.technologies} common={t.common} />
     </main>

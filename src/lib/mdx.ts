@@ -34,7 +34,8 @@ export function getPostSlugs(locale: Locale = defaultLocale): string[] {
 
 export async function getPostBySlug(
   slug: string,
-  locale: Locale = defaultLocale
+  locale: Locale = defaultLocale,
+  allowFallback: boolean = true
 ): Promise<BlogPost | null> {
   try {
     const realSlug = slug.replace(/\.mdx$/, '')
@@ -42,6 +43,37 @@ export async function getPostBySlug(
     const filePath = path.join(postsPath, `${realSlug}.mdx`)
 
     if (!fs.existsSync(filePath)) {
+      // Try fallback to alternate locale
+      if (allowFallback) {
+        const alternateLocale = getAlternateLocale(locale)
+        const alternatePostsPath = getPostsPath(alternateLocale)
+        const alternateFilePath = path.join(
+          alternatePostsPath,
+          `${realSlug}.mdx`
+        )
+
+        if (fs.existsSync(alternateFilePath)) {
+          const fileContent = fs.readFileSync(alternateFilePath, 'utf8')
+          const { data, content } = matter(fileContent)
+          const frontmatter = data as Frontmatter
+          const readingTimeResult = readingTime(content)
+
+          return {
+            slug: realSlug,
+            title: frontmatter.title,
+            publishedAt: frontmatter.publishedAt,
+            updatedAt: frontmatter.updatedAt,
+            excerpt: frontmatter.excerpt,
+            category: frontmatter.category,
+            readingTime: readingTimeResult.text,
+            image: frontmatter.image,
+            locale: alternateLocale,
+            translationSlug: frontmatter.translationSlug,
+            isFallback: true,
+            content,
+          }
+        }
+      }
       return null
     }
 
@@ -72,16 +104,42 @@ export async function getPostBySlug(
 }
 
 export async function getAllPosts(
-  locale: Locale = defaultLocale
+  locale: Locale = defaultLocale,
+  includeFallbacks: boolean = true
 ): Promise<BlogPost[]> {
   try {
     const slugs = getPostSlugs(locale)
-    const posts = []
+    const posts: BlogPost[] = []
+    const existingSlugs = new Set<string>()
 
+    // First, get posts in the requested locale
     for (const file of slugs) {
       const slug = file.replace(/\.mdx$/, '')
-      const post = await getPostBySlug(slug, locale)
-      if (post) posts.push(post)
+      const post = await getPostBySlug(slug, locale, false)
+      if (post) {
+        posts.push(post)
+        existingSlugs.add(slug)
+      }
+    }
+
+    // Then, add fallback posts from alternate locale
+    if (includeFallbacks) {
+      const alternateLocale = getAlternateLocale(locale)
+      const alternateSlugs = getPostSlugs(alternateLocale)
+
+      for (const file of alternateSlugs) {
+        const slug = file.replace(/\.mdx$/, '')
+        // Only add if not already present in current locale
+        if (!existingSlugs.has(slug)) {
+          const post = await getPostBySlug(slug, alternateLocale, false)
+          if (post) {
+            posts.push({
+              ...post,
+              isFallback: true,
+            })
+          }
+        }
+      }
     }
 
     return posts.sort(
