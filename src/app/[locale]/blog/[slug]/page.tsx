@@ -7,6 +7,7 @@ import { notFound } from 'next/navigation'
 import ArticleSchema from '@/components/ArticleSchema'
 import BreadcrumbSchema from '@/components/BreadcrumbSchema'
 import TranslationBanner from '@/components/blog/TranslationBanner'
+import FallbackBanner from '@/components/blog/FallbackBanner'
 import { evaluate } from '@mdx-js/mdx'
 import * as runtime from 'react/jsx-runtime'
 import remarkGfm from 'remark-gfm'
@@ -48,12 +49,21 @@ export default async function BlogPost({ params }: BlogPostProps) {
       <ArticleSchema post={post} />
       <BreadcrumbSchema items={breadcrumbItems} />
       <main className='max-w-3xl mx-auto px-4 py-16'>
-        {translation.exists && translation.slug && (
-          <TranslationBanner
-            currentLocale={validLocale}
-            alternateSlug={translation.slug}
-            translations={t.translationBanner}
+        {post.isFallback ? (
+          <FallbackBanner
+            contentLocale={post.locale}
+            translations={t.fallbackBanner}
+            languageNames={t.language}
           />
+        ) : (
+          translation.exists &&
+          translation.slug && (
+            <TranslationBanner
+              currentLocale={validLocale}
+              alternateSlug={translation.slug}
+              translations={t.translationBanner}
+            />
+          )
         )}
 
         <header className='mb-12'>

@@ -64,6 +64,7 @@ export default async function BlogPage({ params }: BlogPageProps) {
             post={post}
             locale={validLocale}
             common={t.common}
+            languageNames={t.language}
             key={post.slug}
           />
         ))}

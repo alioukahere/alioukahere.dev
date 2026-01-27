@@ -8,24 +8,37 @@ interface BlogPostCardProps {
   readonly common: {
     readMore: string
   }
+  readonly languageNames?: {
+    en: string
+    fr: string
+  }
 }
 
 export default function BlogPostCard({
   post,
   locale,
   common,
+  languageNames,
 }: BlogPostCardProps) {
   const blogUrl = `/${locale}/blog/${post.slug}`
 
   return (
     <article className='p-8 rounded-lg bg-gray-50 dark:bg-gray-800/50 transition-all duration-200'>
-      <div className='mb-6'>
+      <div className='mb-6 flex flex-wrap gap-2'>
         <span
           className='px-4 py-1.5 text-sm bg-blue-100/80 dark:bg-blue-900/30
          text-blue-700 dark:text-blue-300 rounded-full font-medium'
         >
           {post.category}
         </span>
+        {post.isFallback && languageNames && (
+          <span
+            className='px-4 py-1.5 text-sm bg-amber-100/80 dark:bg-amber-900/30
+           text-amber-700 dark:text-amber-300 rounded-full font-medium'
+          >
+            {languageNames[post.locale]}
+          </span>
+        )}
       </div>
 
       <Link href={blogUrl}>

@@ -56,6 +56,9 @@
     "message": "Vous pouvez aussi lire cet article en",
     "language": "Anglais"
   },
+  "fallbackBanner": {
+    "message": "Cet article n'est disponible qu'en"
+  },
   "language": {
     "en": "Anglais",
     "fr": "Français"

@@ -13,6 +13,10 @@ interface BlogSectionProps {
     readMore: string
   }
   readonly locale: Locale
+  readonly languageNames?: {
+    en: string
+    fr: string
+  }
 }
 
 export default function BlogSection({
@@ -20,6 +24,7 @@ export default function BlogSection({
   translations,
   common,
   locale,
+  languageNames,
 }: BlogSectionProps) {
   const blogUrl = `/${locale}/blog`
 
@@ -38,7 +43,13 @@ export default function BlogSection({
 
       <div className='grid md:grid-cols-2 gap-8'>
         {posts.map((post) => (
-          <BlogPostCard post={post} locale={locale} common={common} key={post.slug} />
+          <BlogPostCard
+            post={post}
+            locale={locale}
+            common={common}
+            languageNames={languageNames}
+            key={post.slug}
+          />
         ))}
       </div>
     </section>

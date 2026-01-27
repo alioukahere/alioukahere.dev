@@ -20,6 +20,7 @@ export interface BlogPost {
   image?: string
   locale: Locale
   translationSlug?: string
+  isFallback?: boolean
   content:
     | string
     | MDXRemoteSerializeResult<Record<string, unknown>, Record<string, unknown>>
