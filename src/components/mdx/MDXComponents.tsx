@@ -84,6 +84,14 @@ function UL({ children }: Readonly<{ children?: React.ReactNode }>) {
   )
 }
 
+function OL({ children }: Readonly<{ children?: React.ReactNode }>) {
+  return (
+    <ul className='list-decimal pl-6 mb-6 text-gray-600 dark:text-gray-300'>
+      {children}
+    </ul>
+  )
+}
+
 function LI({ children }: Readonly<{ children?: React.ReactNode }>) {
   return <li className='mb-2'>{children}</li>
 }
@@ -112,5 +120,6 @@ export const mdxComponents = {
   code: Code,
   ul: UL,
   li: LI,
+  ol: OL,
   a: A,
 }
