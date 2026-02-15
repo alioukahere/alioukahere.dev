@@ -1,0 +1,1422 @@
+---
+title: "Understanding SOLID Principles in PHP: A Practical Guide"
+publishedAt: '2026-02-14'
+excerpt: "SOLID principles are the foundation of clean, maintainable object-oriented code. Learn how to apply these five principles in PHP with practical examples relevant to both Symfony and Laravel applications."
+category: 'Design Patterns'
+---
+
+A few years ago, I worked on a codebase that had clearly evolved under pressure. There was a single class called `OrderManager` that contained more than 3,000 lines. It validated orders, calculated prices, applied discounts, managed inventory, sent emails, generated invoices, and so much more. Every time we needed to change something, we had to go through this large file and hope we didn't break anything.
+
+That experience taught me something valuable: writing code that works is easy, but writing code that's maintainable, testable, and extensible requires following proven principles and design patterns.
+
+## What is SOLID?
+
+SOLID is an acronym for five design principles introduced by Uncle Bob ([Robert C. Martin](https://en.wikipedia.org/wiki/Robert_C._Martin)) in the early 2000s. These principles help us write code that's easier to understand, maintain, and extend:
+
+- **S** for Single Responsibility Principle
+- **O** for Open/Closed Principle
+- **L** for Liskov Substitution Principle
+- **I** for Interface Segregation Principle
+- **D** for Dependency Inversion Principle
+
+These aren't just academic concepts you have to memorize for a job interview. They're practical guidelines that can genuinely transform how you write code, no matter what framework you're using.
+
+## Our Example: E-Commerce Order Processing
+
+Throughout this article, we'll build an e-commerce order processing system together. I chose this example because it's complex enough to show all five principles in action.
+
+Let's start with what NOT to do. Here's the kind of "god class" I mentioned earlier, it's a single that does everything.
+
+```php
+<?php
+
+namespace App\Service;
+
+class OrderManager
+{
+    public function __construct(
+        private readonly EntityManagerInterface $em,
+        private readonly MailerInterface $mailer,
+    ) {}
+
+    public function processOrder(array $orderData): Order
+    {
+        // Validate order data
+        if (empty($orderData['items'])) {
+            throw new \InvalidArgumentException('Order must have items');
+        }
+
+        foreach ($orderData['items'] as $item) {
+            if ($item['quantity'] <= 0) {
+                throw new \InvalidArgumentException('Quantity must be positive');
+            }
+            if ($item['price'] < 0) {
+                throw new \InvalidArgumentException('Price cannot be negative');
+            }
+        }
+
+        // Calculate subtotal
+        $subtotal = 0;
+        foreach ($orderData['items'] as $item) {
+            $subtotal += $item['price'] * $item['quantity'];
+        }
+
+        // Apply discounts
+        $discount = 0;
+        if (isset($orderData['coupon'])) {
+            if ($orderData['coupon'] === 'SAVE10') {
+                $discount = $subtotal * 0.10;
+            } elseif ($orderData['coupon'] === 'SAVE20') {
+                $discount = $subtotal * 0.20;
+            } elseif ($orderData['coupon'] === 'FLAT50') {
+                $discount = 50;
+            }
+        }
+
+        // Calculate tax (VAT)
+        $taxableAmount = $subtotal - $discount;
+        $country = $orderData['shipping_country'] ?? 'SN';
+        if ($country === 'SN') {
+            $tax = $taxableAmount * 0.18;
+        } elseif ($country === 'GN') {
+            $tax = $taxableAmount * 0.18;
+        } elseif ($country === 'FR') {
+            $tax = $taxableAmount * 0.20;
+        } elseif ($country === 'US') {
+            $tax = $taxableAmount * 0.08;
+        } else {
+            $tax = $taxableAmount * 0.15;
+        }
+
+        // Calculate shipping cost
+        $totalWeight = 0;
+        foreach ($orderData['items'] as $item) {
+            $totalWeight += ($item['weight'] ?? 0) * $item['quantity'];
+        }
+
+        $shippingMethod = $orderData['shipping_method'] ?? 'standard';
+        if ($shippingMethod === 'standard') {
+            $shipping = $totalWeight * 500;
+        } elseif ($shippingMethod === 'express') {
+            $shipping = $totalWeight * 1500;
+        } elseif ($shippingMethod === 'international') {
+            $shipping = $totalWeight * 5000;
+        }
+
+        // Check inventory
+        foreach ($orderData['items'] as $item) {
+            $product = $this->em->find(Product::class, $item['product_id']);
+            if ($product->getStock() < $item['quantity']) {
+                throw new \RuntimeException("Insufficient stock for {$product->getName()}");
+            }
+        }
+
+        // Create order
+        $order = new Order();
+        $order->setSubtotal($subtotal);
+        $order->setDiscount($discount);
+        $order->setTax($tax);
+        $order->setShipping($shipping);
+        $order->setTotal($subtotal - $discount + $tax + $shipping);
+        $order->setStatus('pending');
+
+        // Save order and update inventory
+        $this->em->persist($order);
+        foreach ($orderData['items'] as $item) {
+            $product = $this->em->find(Product::class, $item['product_id']);
+            $product->setStock($product->getStock() - $item['quantity']);
+        }
+        $this->em->flush();
+
+        // Send confirmation email
+        $email = (new Email())
+            ->to($orderData['customer_email'])
+            ->subject('Order Confirmation #' . $order->getId())
+            ->html("<p>Thank you for your order!</p>");
+        $this->mailer->send($email);
+
+        return $order;
+    }
+
+    // Plus many more methods for refunds, cancellations, reports...
+}
+```
+
+This class is doing way too much, and updating it is a nightmare. Let's see how SOLID principles help us fix this mess.
+
+## S - Single Responsibility Principle (SRP)
+
+> "A class should have one, and only one, reason to change."
+> — Robert C. Martin
+
+The Single Responsibility Principle states that a class should have only one job. If a class has multiple responsibilities, changes to one responsibility might affect or break the others.
+
+### The Problem
+
+Looking at our `OrderManager`, I count at least five reasons why we might need to modify it:
+
+1. Validation rules change
+2. Price calculation logic changes
+3. Tax rules change
+4. Shipping calculation changes
+5. Notification requirements change
+
+Every time any of these change, we're modifying the same massive file. That's five opportunities for something to go wrong.
+
+### The Solution
+
+Let's split this into focused, single-purpose classes:
+
+```php
+<?php
+
+namespace App\Service\Order;
+
+class OrderValidator
+{
+    public function validate(array $orderData): void
+    {
+        if (empty($orderData['items'])) {
+            throw new InvalidOrderException('Order must have items');
+        }
+
+        foreach ($orderData['items'] as $item) {
+            $this->validateItem($item);
+        }
+    }
+
+    private function validateItem(array $item): void
+    {
+        if (!isset($item['product_id'])) {
+            throw new InvalidOrderException('Item must have a product ID');
+        }
+
+        if (!isset($item['quantity']) || $item['quantity'] <= 0) {
+            throw new InvalidOrderException('Quantity must be positive');
+        }
+
+        if (!isset($item['price']) || $item['price'] < 0) {
+            throw new InvalidOrderException('Price cannot be negative');
+        }
+    }
+}
+```
+
+```php
+<?php
+
+namespace App\Service\Order;
+
+class PriceCalculator
+{
+    public function calculateSubtotal(array $items): float
+    {
+        return array_reduce(
+            $items,
+            fn(float $total, array $item) => $total + ($item['price'] * $item['quantity']),
+            0.0
+        );
+    }
+}
+```
+
+```php
+<?php
+
+namespace App\Service\Order;
+
+class TaxCalculator
+{
+    private const TAX_RATES = [
+        'SN' => 0.18,
+        'GN' => 0.18,
+        'FR' => 0.20,
+        'US' => 0.08,
+    ];
+
+    private const DEFAULT_TAX_RATE = 0.18;
+
+    public function calculate(float $amount, string $country): float
+    {
+        $rate = self::TAX_RATES[$country] ?? self::DEFAULT_TAX_RATE;
+
+        return $amount * $rate;
+    }
+}
+```
+
+```php
+<?php
+
+namespace App\Service\Order;
+
+class DiscountCalculator
+{
+    public function calculate(float $subtotal, ?string $couponCode): float
+    {
+        if (empty($couponCode)) {
+            return 0.0;
+        }
+
+        return match ($couponCode) {
+            'SAVE10' => $subtotal * 0.10,
+            'SAVE20' => $subtotal * 0.20,
+            'FLAT50' => min(50.0, $subtotal),
+            default => 0.0,
+        };
+    }
+}
+```
+
+```php
+<?php
+
+namespace App\Service\Order;
+
+class InventoryService
+{
+    public function __construct(
+        private readonly EntityManagerInterface $em,
+    ) {}
+
+    public function checkAvailability(array $items): void
+    {
+        foreach ($items as $item) {
+            $product = $this->em->find(Product::class, $item['product_id']);
+
+            if ($product === null) {
+                throw new ProductNotFoundException($item['product_id']);
+            }
+
+            if ($product->getStock() < $item['quantity']) {
+                throw new InsufficientStockException($product, $item['quantity']);
+            }
+        }
+    }
+
+    public function decrementStock(array $items): void
+    {
+        foreach ($items as $item) {
+            $product = $this->em->find(Product::class, $item['product_id']);
+            $product->setStock($product->getStock() - $item['quantity']);
+        }
+    }
+}
+```
+
+```php
+<?php
+
+namespace App\Service\Order;
+
+class OrderNotificationService
+{
+    public function __construct(
+        private readonly MailerInterface $mailer,
+    ) {}
+
+    public function sendConfirmation(Order $order, string $customerEmail): void
+    {
+        $email = (new Email())
+            ->to($customerEmail)
+            ->subject("Order Confirmation #{$order->getId()}")
+            ->html($this->buildConfirmationHtml($order));
+
+        $this->mailer->send($email);
+    }
+
+    private function buildConfirmationHtml(Order $order): string
+    {
+        return "<p>Thank you for your order #{$order->getId()}!</p>";
+    }
+}
+```
+
+Now our main `OrderService` becomes a coordinator. It doesn't know **how** to validate or calculate taxes. It just knows **who** to ask:
+
+```php
+<?php
+
+namespace App\Service\Order;
+
+class OrderService
+{
+    public function __construct(
+        private readonly OrderValidator $validator,
+        private readonly PriceCalculator $priceCalculator,
+        private readonly DiscountCalculator $discountCalculator,
+        private readonly TaxCalculator $taxCalculator,
+        private readonly ShippingCalculator $shippingCalculator,
+        private readonly InventoryService $inventoryService,
+        private readonly OrderNotificationService $notificationService,
+        private readonly EntityManagerInterface $em,
+    ) {}
+
+    public function process(array $orderData): Order
+    {
+        $this->validator->validate($orderData);
+        $this->inventoryService->checkAvailability($orderData['items']);
+
+        $subtotal = $this->priceCalculator->calculateSubtotal($orderData['items']);
+        $discount = $this->discountCalculator->calculate($subtotal, $orderData['coupon'] ?? null);
+        $tax = $this->taxCalculator->calculate($subtotal - $discount, $orderData['shipping_country'] ?? 'SN');
+        $shipping = $this->shippingCalculator->calculate($orderData['items'], $orderData['shipping_method'] ?? 'standard');
+
+        $order = new Order();
+        $order->setSubtotal($subtotal);
+        $order->setDiscount($discount);
+        $order->setTax($tax);
+        $order->setShipping($shipping);
+        $order->setTotal($subtotal - $discount + $tax + $shipping);
+        $order->setStatus('pending');
+
+        $this->em->persist($order);
+        $this->inventoryService->decrementStock($orderData['items']);
+        $this->em->flush();
+
+        $this->notificationService->sendConfirmation($order, $orderData['customer_email']);
+
+        return $order;
+    }
+}
+```
+
+Much better. Now when the tax rules change for a new country, we only need to update `TaxCalculator`. The rest of the system doesn't care.
+
+## O - Open/Closed Principle (OCP)
+
+> "Software entities should be open for extension, but closed for modification."
+> — Bertrand Meyer
+
+This one sounds like a riddle 😀, but it's actually practical: you should be able to add new features without changing existing code. How? Through interfaces and polymorphism.
+
+### The Problem
+
+Look at our `DiscountCalculator`:
+
+```php
+public function calculate(float $subtotal, ?string $couponCode): float
+{
+    return match ($couponCode) {
+        'SAVE10' => $subtotal * 0.10,
+        'SAVE20' => $subtotal * 0.20,
+        'FLAT50' => min(50.0, $subtotal),
+        default => 0.0,
+    };
+}
+```
+
+Every time marketing comes up with a new promotion (and believe me they always do), we need to modify this file and add another case. They can come up with discounts like:
+
+- Buy-one-get-one-free
+- Tiered discounts based on cart value
+- First-time customer discounts
+- Seasonal promotions
+
+Each new requirement means modifying `DiscountCalculator`. That's a violation of the OCP, and it's also risky, every change could accidentally break existing discount logic.
+
+### The Solution
+
+Instead of one class that knows all discount types, let's create a system where each discount type is its own class:
+
+```php
+<?php
+
+namespace App\Discount;
+
+interface DiscountRuleInterface
+{
+    public function supports(OrderContext $context): bool;
+
+    public function calculate(OrderContext $context): float;
+
+    public function getPriority(): int;
+}
+```
+
+```php
+<?php
+
+namespace App\Discount;
+
+/**
+ * DTO that carries order information to discount rules.
+ */
+readonly class OrderContext
+{
+    public function __construct(
+        public array $items,
+        public float $subtotal,
+        public ?string $couponCode,
+        public ?Customer $customer,
+    ) {}
+}
+```
+
+Now each discount rule is self-contained:
+
+```php
+<?php
+
+namespace App\Discount\Rule;
+
+class PercentageCouponRule implements DiscountRuleInterface
+{
+    // You'll probably get these from a database or somewhere else
+    private const COUPONS = [
+        'SAVE10' => 0.10,
+        'SAVE20' => 0.20,
+        'SAVE30' => 0.30,
+    ];
+
+    public function supports(OrderContext $context): bool
+    {
+        return $context->couponCode !== null
+            && isset(self::COUPONS[$context->couponCode]);
+    }
+
+    public function calculate(OrderContext $context): float
+    {
+        return $context->subtotal * self::COUPONS[$context->couponCode];
+    }
+
+    public function getPriority(): int
+    {
+        return 100;
+    }
+}
+```
+
+```php
+<?php
+
+namespace App\Discount\Rule;
+
+class FlatAmountCouponRule implements DiscountRuleInterface
+{
+    private const COUPONS = [
+        'FLAT50' => 50.0,
+        'FLAT100' => 100.0,
+    ];
+
+    public function supports(OrderContext $context): bool
+    {
+        return $context->couponCode !== null
+            && isset(self::COUPONS[$context->couponCode]);
+    }
+
+    public function calculate(OrderContext $context): float
+    {
+        return min(self::COUPONS[$context->couponCode], $context->subtotal);
+    }
+
+    public function getPriority(): int
+    {
+        return 90;
+    }
+}
+```
+
+```php
+<?php
+
+namespace App\Discount\Rule;
+
+class FirstTimeCustomerRule implements DiscountRuleInterface
+{
+    public function supports(OrderContext $context): bool
+    {
+        return $context->customer !== null
+            && $context->customer->getOrderCount() === 0;
+    }
+
+    public function calculate(OrderContext $context): float
+    {
+        return $context->subtotal * 0.15;
+    }
+
+    public function getPriority(): int
+    {
+        return 50;
+    }
+}
+```
+
+```php
+<?php
+
+namespace App\Discount\Rule;
+
+class BulkPurchaseRule implements DiscountRuleInterface
+{
+    public function supports(OrderContext $context): bool
+    {
+        return $context->subtotal >= 100000; // 100,000 XOF
+    }
+
+    public function calculate(OrderContext $context): float
+    {
+        // 5% discount for orders over 100,000 XOF
+        return $context->subtotal * 0.05;
+    }
+
+    public function getPriority(): int
+    {
+        return 10;
+    }
+}
+```
+
+The calculator just loops through rules and uses the first one that applies:
+
+```php
+<?php
+
+namespace App\Discount;
+
+use Symfony\Component\DependencyInjection\Attribute\AutowireIterator;
+
+class DiscountCalculator
+{
+    /** @var DiscountRuleInterface[] */
+    private array $rules;
+
+    public function __construct(
+        #[AutowireIterator('app.discount_rule')]
+        iterable $rules,
+    ) {
+        $this->rules = $rules instanceof \Traversable
+            ? iterator_to_array($rules)
+            : $rules;
+
+        // Sort by priority (highest first)
+        usort($this->rules, fn($a, $b) => $b->getPriority() <=> $a->getPriority());
+    }
+
+    public function calculate(OrderContext $context): float
+    {
+        foreach ($this->rules as $rule) {
+            if ($rule->supports($context)) {
+                return $rule->calculate($context);
+            }
+        }
+
+        return 0.0;
+    }
+}
+```
+
+### Framework Notes
+
+**Symfony**: Use the `#[AutowireIterator]` attribute combined with tagged services:
+
+```yaml
+# config/services.yaml
+services:
+    _instanceof:
+        App\Discount\DiscountRuleInterface:
+            tags: ['app.discount_rule']
+```
+
+The `#[AutowireIterator]` attribute in the constructor automatically injects all services tagged with `app.discount_rule`.
+
+**Laravel**: Use tagged bindings with `giveTagged`:
+
+```php
+// AppServiceProvider.php
+public function register(): void
+{
+    $this->app->tag([
+        PercentageCouponRule::class,
+        FlatAmountCouponRule::class,
+        FirstTimeCustomerRule::class,
+        BulkPurchaseRule::class,
+    ], 'discount.rules');
+
+    $this->app->when(DiscountCalculator::class)
+        ->needs('$rules')
+        ->giveTagged('discount.rules');
+}
+```
+
+Now when marketing wants a "Black Friday 50% off" rule, we just add a new class. No existing code changes. That's the power of the OCP.
+
+## L - Liskov Substitution Principle (LSP)
+
+> "If S is a subtype of T, then objects of type T may be replaced with objects of type S without altering the correctness of the program."
+> — Barbara Liskov
+
+I agree with you, the formal definition is really scary. Let's translate it in plain English:
+
+> If your code expects a `ShippingCalculator`, any class implementing that interface should work without surprises. No special cases, no "oh but this one is different."
+
+I hope it's clearer now.
+
+### The Problem
+
+Let's say we have shipping calculators:
+
+```php
+<?php
+
+namespace App\Shipping;
+
+interface ShippingCalculatorInterface
+{
+    public function calculate(array $items, string $destination): float;
+}
+```
+
+```php
+<?php
+
+namespace App\Shipping;
+
+class StandardShippingCalculator implements ShippingCalculatorInterface
+{
+    public function calculate(array $items, string $destination): float
+    {
+        $weight = $this->calculateTotalWeight($items);
+
+        return $weight * 500; // 500 XOF per kg
+    }
+
+    private function calculateTotalWeight(array $items): float
+    {
+        return array_reduce(
+            $items,
+            fn($total, $item) => $total + (($item['weight'] ?? 0) * $item['quantity']),
+            0.0
+        );
+    }
+}
+```
+
+Now someone adds express shipping with a clever "optimization":
+
+```php
+<?php
+
+namespace App\Shipping;
+
+// BAD: Violates LSP
+class ExpressShippingCalculator implements ShippingCalculatorInterface
+{
+    public function calculate(array $items, string $destination): float
+    {
+        // Only available for West African countries!
+        if (!$this->isWestAfrican($destination)) {
+            return -1; // Magic value to indicate unavailability
+        }
+
+        $weight = $this->calculateTotalWeight($items);
+
+        return $weight * 1500; // 1500 XOF per kg
+    }
+}
+```
+
+See the problem? The interface says `calculate()` returns a shipping cost. But this implementation sometimes returns `-1` to mean "not available." Now every caller needs special code to handle this magic value. We've broken the contract.
+
+### The Solution
+
+Instead of sneaking in special return values, make the contract explicit:
+
+```php
+<?php
+
+namespace App\Shipping;
+
+interface ShippingCalculatorInterface
+{
+    /**
+     * Check if this shipping method is available for the given parameters.
+     */
+    public function isAvailable(array $items, string $destination): bool;
+
+    /**
+     * Calculate shipping cost.
+     *
+     * @throws ShippingUnavailableException if called when not available
+     */
+    public function calculate(array $items, string $destination): float;
+
+    public function getName(): string;
+}
+```
+
+We can also extract the shared weight calculation into an abstract base class:
+
+```php
+<?php
+
+namespace App\Shipping;
+
+abstract class AbstractShippingCalculator implements ShippingCalculatorInterface
+{
+    protected function calculateTotalWeight(array $items): float
+    {
+        return array_reduce(
+            $items,
+            fn($total, $item) => $total + (($item['weight'] ?? 0) * $item['quantity']),
+            0.0
+        );
+    }
+}
+```
+
+```php
+<?php
+
+namespace App\Shipping;
+
+class StandardShippingCalculator extends AbstractShippingCalculator
+{
+    public function isAvailable(array $items, string $destination): bool
+    {
+        return true; // Always available
+    }
+
+    public function calculate(array $items, string $destination): float
+    {
+        return $this->calculateTotalWeight($items) * 500; // 500 XOF per kg
+    }
+
+    public function getName(): string
+    {
+        return 'Standard Shipping';
+    }
+}
+```
+
+```php
+<?php
+
+namespace App\Shipping;
+
+class ExpressShippingCalculator extends AbstractShippingCalculator
+{
+    private const WEST_AFRICAN_COUNTRIES = ['SN', 'GN', 'CI', 'ML'];
+
+    public function isAvailable(array $items, string $destination): bool
+    {
+        return in_array($destination, self::WEST_AFRICAN_COUNTRIES, true);
+    }
+
+    public function calculate(array $items, string $destination): float
+    {
+        if (!$this->isAvailable($items, $destination)) {
+            throw new ShippingUnavailableException(
+                "Express shipping is not available for {$destination}"
+            );
+        }
+
+        return $this->calculateTotalWeight($items) * 1500; // 1500 XOF per kg
+    }
+
+    public function getName(): string
+    {
+        return 'Express Shipping';
+    }
+}
+```
+
+```php
+<?php
+
+namespace App\Shipping;
+
+class InternationalShippingCalculator extends AbstractShippingCalculator
+{
+    private const WEST_AFRICAN_COUNTRIES = ['SN', 'GN', 'CI', 'ML'];
+
+    public function isAvailable(array $items, string $destination): bool
+    {
+        // Only for destinations outside West Africa
+        return !in_array($destination, self::WEST_AFRICAN_COUNTRIES, true);
+    }
+
+    public function calculate(array $items, string $destination): float
+    {
+        if (!$this->isAvailable($items, $destination)) {
+            throw new ShippingUnavailableException(
+                "International shipping is only for destinations outside West Africa"
+            );
+        }
+
+        $weight = $this->calculateTotalWeight($items);
+        $baseRate = $weight * 5000; // 5000 XOF per kg base rate
+
+        // Additional fees for certain regions
+        return match (true) {
+            in_array($destination, ['FR', 'BE', 'CH']) => $baseRate * 1.2,
+            in_array($destination, ['US', 'CA']) => $baseRate * 1.5,
+            in_array($destination, ['CN', 'JP']) => $baseRate * 1.8,
+            default => $baseRate * 1.3,
+        };
+    }
+
+    public function getName(): string
+    {
+        return 'International Shipping';
+    }
+}
+```
+
+Now the shipping service can work with any calculator without surprises:
+
+```php
+<?php
+
+namespace App\Shipping;
+
+class ShippingService
+{
+    /** @var ShippingCalculatorInterface[] */
+    private array $calculators;
+
+    public function __construct(iterable $calculators)
+    {
+        $this->calculators = $calculators instanceof \Traversable
+            ? iterator_to_array($calculators)
+            : $calculators;
+    }
+
+    public function getAvailableMethods(array $items, string $destination): array
+    {
+        $methods = [];
+
+        foreach ($this->calculators as $calculator) {
+            if ($calculator->isAvailable($items, $destination)) {
+                $methods[] = [
+                    'name' => $calculator->getName(),
+                    'cost' => $calculator->calculate($items, $destination),
+                ];
+            }
+        }
+
+        return $methods;
+    }
+}
+```
+
+No type checking. No magic values. Every calculator is truly substitutable because they all honor the same contract.
+
+## I - Interface Segregation Principle (ISP)
+
+> "Clients should not be forced to depend on interfaces they do not use."
+> — Robert C. Martin
+
+Ever implemented an interface and found yourself writing `throw new \RuntimeException('Not implemented')` for half the methods? That's a code smell, and ISP is the cure.
+
+### The Problem
+
+Imagine we got ambitious and created this:
+
+```php
+<?php
+
+namespace App\Order;
+
+// BAD: Fat interface
+interface OrderProcessorInterface
+{
+    public function validateOrder(Order $order): bool;
+    public function calculateTotal(Order $order): float;
+    public function applyDiscount(Order $order, string $code): void;
+    public function calculateTax(Order $order): float;
+    public function calculateShipping(Order $order): float;
+    public function checkInventory(Order $order): bool;
+    public function reserveInventory(Order $order): void;
+    public function processPayment(Order $order): bool;
+    public function generateInvoice(Order $order): Invoice;
+    public function sendConfirmationEmail(Order $order): void;
+    public function sendShippingNotification(Order $order): void;
+    public function generateShippingLabel(Order $order): string;
+    public function trackShipment(Order $order): array;
+}
+```
+
+Now you need a simple service that only validates orders. Too bad, you're implementing 13 methods anyway. Most will be empty or throw exceptions. That's not just annoying. It's misleading. Someone reading your class might think it actually does all those things.
+
+### The Solution
+
+Break it up. Each interface should represent one cohesive capability:
+
+```php
+<?php
+
+namespace App\Order;
+
+interface OrderValidatorInterface
+{
+    public function validate(Order $order): ValidationResult;
+}
+```
+
+```php
+<?php
+
+namespace App\Order;
+
+interface OrderPricingInterface
+{
+    public function calculateSubtotal(Order $order): float;
+    public function calculateTax(Order $order): float;
+    public function calculateShipping(Order $order): float;
+    public function calculateTotal(Order $order): float;
+}
+```
+
+```php
+<?php
+
+namespace App\Order;
+
+interface InventoryManagerInterface
+{
+    public function checkAvailability(Order $order): AvailabilityResult;
+    public function reserve(Order $order): void;
+    public function release(Order $order): void;
+}
+```
+
+```php
+<?php
+
+namespace App\Order;
+
+interface PaymentProcessorInterface
+{
+    public function process(Order $order, PaymentMethod $method): PaymentResult;
+    public function refund(Order $order, float $amount): RefundResult;
+}
+```
+
+```php
+<?php
+
+namespace App\Order;
+
+interface OrderNotifierInterface
+{
+    public function sendConfirmation(Order $order): void;
+    public function sendShippingUpdate(Order $order, ShipmentStatus $status): void;
+}
+```
+
+Now classes can implement only what they actually need:
+
+```php
+<?php
+
+namespace App\Order;
+
+class OrderValidator implements OrderValidatorInterface
+{
+    public function validate(Order $order): ValidationResult
+    {
+        $errors = [];
+
+        if ($order->getItems()->isEmpty()) {
+            $errors[] = 'Order must have at least one item';
+        }
+
+        if ($order->getCustomer() === null) {
+            $errors[] = 'Order must have a customer';
+        }
+
+        return new ValidationResult(empty($errors), $errors);
+    }
+}
+```
+
+And the main service only depends on what it needs:
+
+```php
+<?php
+
+namespace App\Order;
+
+class OrderService
+{
+    public function __construct(
+        private readonly OrderValidatorInterface $validator,
+        private readonly InventoryManagerInterface $inventory,
+        private readonly OrderPricingInterface $pricing,
+        private readonly PaymentProcessorInterface $payment,
+        private readonly OrderNotifierInterface $notifier,
+    ) {}
+
+    public function checkout(Order $order, PaymentMethod $paymentMethod): CheckoutResult
+    {
+        $validation = $this->validator->validate($order);
+        if (!$validation->isValid()) {
+            return CheckoutResult::failed($validation->getErrors());
+        }
+
+        $availability = $this->inventory->checkAvailability($order);
+        if (!$availability->isAvailable()) {
+            return CheckoutResult::failed(['Some items are out of stock']);
+        }
+
+        $order->setTotal($this->pricing->calculateTotal($order));
+
+        $paymentResult = $this->payment->process($order, $paymentMethod);
+        if (!$paymentResult->isSuccessful()) {
+            return CheckoutResult::failed(['Payment failed']);
+        }
+
+        $this->inventory->reserve($order);
+        $this->notifier->sendConfirmation($order);
+
+        return CheckoutResult::success($order);
+    }
+}
+```
+
+Both Symfony and Laravel follow ISP in their own contracts. Symfony has `CacheInterface` separate from `CacheItemPoolInterface`. Laravel keeps `Illuminate\Contracts\Cache\Repository` distinct from `Illuminate\Contracts\Cache\Store`.
+
+## D - Dependency Inversion Principle (DIP)
+
+> "High-level modules should not depend on low-level modules. Both should depend on abstractions."
+> — Robert C. Martin
+
+This is about decoupling. Instead of your code depending on specific implementations (Stripe, MySQL, Redis), it should depend on interfaces. The implementations become plug-and-play.
+
+### The Problem
+
+Here's a service that's tied to its dependencies:
+
+```php
+<?php
+
+namespace App\Order;
+
+// BAD: Depends on concrete implementations
+class OrderService
+{
+    public function __construct(
+        private readonly StripePaymentGateway $paymentGateway,
+        private readonly MySQLOrderRepository $orderRepository,
+        private readonly SmtpEmailService $emailService,
+        private readonly RedisCache $cache,
+    ) {}
+
+    public function process(Order $order): void
+    {
+        $this->paymentGateway->charge($order->getTotal());
+        $this->orderRepository->save($order);
+        $this->cache->set("order_{$order->getId()}", $order);
+        $this->emailService->send($order->getCustomerEmail(), 'Order confirmed!');
+    }
+}
+```
+
+Problems:
+
+1. **Switching is painful**: Want to use PayPal? Change the code everywhere.
+2. **Testing is a nightmare**: You need real Stripe keys, a MySQL database, Redis server, and SMTP server just to run tests.
+3. **Too much knowledge**: This class knows it's using Stripe, MySQL, Redis, SMTP. It shouldn't care.
+
+### The Solution
+
+Define interfaces for what you need:
+
+```php
+<?php
+
+namespace App\Payment;
+
+interface PaymentGatewayInterface
+{
+    public function charge(float $amount, PaymentMethod $method): PaymentResult;
+    public function refund(string $transactionId, float $amount): RefundResult;
+}
+```
+
+```php
+<?php
+
+namespace App\Repository;
+
+interface OrderRepositoryInterface
+{
+    public function save(Order $order): void;
+    public function find(int $id): ?Order;
+    public function findByCustomer(Customer $customer): array;
+}
+```
+
+Then implement them:
+
+```php
+<?php
+
+namespace App\Payment;
+
+class StripePaymentGateway implements PaymentGatewayInterface
+{
+    public function __construct(
+        private readonly string $apiKey,
+    ) {}
+
+    public function charge(float $amount, PaymentMethod $method): PaymentResult
+    {
+        // Stripe-specific implementation
+    }
+
+    public function refund(string $transactionId, float $amount): RefundResult
+    {
+        // Stripe refund implementation
+    }
+}
+```
+
+```php
+<?php
+
+namespace App\Payment;
+
+class PayPalPaymentGateway implements PaymentGatewayInterface
+{
+    public function __construct(
+        private readonly string $clientId,
+        private readonly string $clientSecret,
+    ) {}
+
+    public function charge(float $amount, PaymentMethod $method): PaymentResult
+    {
+        // PayPal-specific implementation
+    }
+
+    public function refund(string $transactionId, float $amount): RefundResult
+    {
+        // PayPal refund implementation
+    }
+}
+```
+
+For testing, create a fake that's fast and predictable:
+
+```php
+<?php
+
+namespace App\Tests\Mocks;
+
+class FakePaymentGateway implements PaymentGatewayInterface
+{
+    private array $charges = [];
+    private bool $shouldFail = false;
+
+    public function charge(float $amount, PaymentMethod $method): PaymentResult
+    {
+        if ($this->shouldFail) {
+            return PaymentResult::failed('Payment declined');
+        }
+
+        $transactionId = 'fake_' . uniqid();
+        $this->charges[] = [
+            'id' => $transactionId,
+            'amount' => $amount,
+        ];
+
+        return PaymentResult::success($transactionId);
+    }
+
+    public function refund(string $transactionId, float $amount): RefundResult
+    {
+        return RefundResult::success();
+    }
+
+    // Test helpers
+    public function failNextCharge(): void
+    {
+        $this->shouldFail = true;
+    }
+
+    public function getCharges(): array
+    {
+        return $this->charges;
+    }
+}
+```
+
+Now the service depends only on abstractions:
+
+```php
+<?php
+
+namespace App\Order;
+
+class OrderService
+{
+    public function __construct(
+        private readonly PaymentGatewayInterface $paymentGateway,
+        private readonly OrderRepositoryInterface $orderRepository,
+        private readonly NotificationServiceInterface $notificationService,
+    ) {}
+
+    public function process(Order $order, PaymentMethod $paymentMethod): OrderResult
+    {
+        $paymentResult = $this->paymentGateway->charge(
+            $order->getTotal(),
+            $paymentMethod
+        );
+
+        if (!$paymentResult->isSuccessful()) {
+            return OrderResult::failed($paymentResult->getError());
+        }
+
+        $order->setPaymentTransactionId($paymentResult->getTransactionId());
+        $order->setStatus(OrderStatus::PAID);
+
+        $this->orderRepository->save($order);
+
+        $this->notificationService->send(
+            new OrderConfirmationNotification($order)
+        );
+
+        return OrderResult::success($order);
+    }
+}
+```
+
+### Configuring the Container
+
+**Symfony**:
+
+```yaml
+# config/services.yaml
+services:
+    App\Payment\PaymentGatewayInterface:
+        alias: App\Payment\StripePaymentGateway
+
+    # Swap to fake in tests
+    App\Payment\PaymentGatewayInterface:
+        alias: App\Tests\Mocks\FakePaymentGateway
+        when@test: true
+```
+
+**Laravel**:
+
+```php
+// AppServiceProvider.php
+public function register(): void
+{
+    $this->app->bind(
+        PaymentGatewayInterface::class,
+        StripePaymentGateway::class
+    );
+
+    if ($this->app->environment('testing')) {
+        $this->app->bind(
+            PaymentGatewayInterface::class,
+            FakePaymentGateway::class
+        );
+    }
+}
+```
+
+Now switching payment providers or running tests is just a configuration change. The `OrderService` doesn't know or care what's behind the interface.
+
+## How They All Work Together
+
+These principles aren't meant to be applied in isolation. They reinforce each other:
+
+- **SRP + OCP**: Classes with single responsibilities are naturally easier to extend without modification.
+- **LSP + ISP**: Smaller, focused interfaces make it easier to create proper substitutable implementations.
+- **DIP + Everything**: Depending on abstractions is what makes all the other principles practical.
+
+Here's our final `OrderService`:
+
+```php
+<?php
+
+namespace App\Order;
+
+class OrderService
+{
+    public function __construct(
+        private readonly OrderValidatorInterface $validator,        // DIP: abstraction
+        private readonly InventoryManagerInterface $inventory,      // DIP: abstraction
+        private readonly DiscountCalculator $discountCalculator,    // OCP: extensible
+        private readonly OrderPricingInterface $pricing,            // ISP: focused interface
+        private readonly PaymentGatewayInterface $payment,          // DIP + LSP: substitutable
+        private readonly OrderRepositoryInterface $repository,      // DIP: abstraction
+        private readonly OrderNotifierInterface $notifier,          // ISP: focused interface
+    ) {}
+
+    // SRP: This class only coordinates the order process
+    public function checkout(Order $order, PaymentMethod $method): CheckoutResult
+    {
+        // Each step is handled by a focused service (SRP)
+        // We can swap implementations easily (DIP + LSP)
+        // We can add new discount rules without changing this code (OCP)
+        // Each interface is focused on what we need (ISP)
+    }
+}
+```
+
+## When NOT to Apply SOLID
+
+Here's the thing: SOLID principles are guidelines, not commandments. Over-applying them leads to a different kind of mess: over-engineering, and we don't want that.
+
+### Warning Signs of Over-Engineering
+
+1. **Too many tiny classes**: If you have `StringValidator`, `IntegerValidator`, `EmailValidator`, `PhoneValidator` each in separate files for a simple contact form... You might have gone too far. It's okay to have one `FormValidator`.
+
+2. **Interfaces with one implementation**: Creating `UserServiceInterface` that only `UserService` will ever implement? Ask yourself why. Interfaces are for polymorphism. If there's no variation, you don't need one.
+
+3. **Premature abstraction**: Don't create `PaymentGatewayInterface` if you only support Stripe and have zero plans for others. YAGNI (You Ain't Gonna Need It) is also a principle.
+
+4. **Layers of indirection**: If understanding a simple operation requires jumping through 10 classes, you've over-abstracted.
+
+### Sometimes Simple is Right
+
+```php
+// This is fine for a simple app
+class UserService
+{
+    public function __construct(
+        private readonly EntityManagerInterface $em,
+    ) {}
+
+    public function createUser(string $email, string $password): User
+    {
+        $user = new User();
+        $user->setEmail($email);
+        $user->setPassword(password_hash($password, PASSWORD_DEFAULT));
+
+        $this->em->persist($user);
+        $this->em->flush();
+
+        return $user;
+    }
+}
+```
+
+Don't create `UserCreatorInterface`, `UserFactoryInterface`, `PasswordHasherInterface`, and `UserPersisterInterface` unless you actually need that flexibility.
+
+### Rules of Thumb
+
+1. **Start simple**: Write working code first, then refactor when complexity demands it. But don't forget to refactor, that's how we ended up with the `OrderManager` monster.
+2. **Rule of Three**: Consider abstracting when you need the same behavior in three places. Not before.
+3. **Listen to pain**: If changing one thing breaks another, or testing is hard, SOLID can help.
+4. **Think about your team**: Architecture that only you understand defeats the purpose.
+
+## Conclusion
+
+SOLID principles are powerful tools for writing maintainable code:
+
+- **Single Responsibility**: One class, one reason to change
+- **Open/Closed**: Extend through new code, not modifications
+- **Liskov Substitution**: Subclasses must honor their parent's contract
+- **Interface Segregation**: Many small interfaces beat one bloated one
+- **Dependency Inversion**: Depend on abstractions, not concretions
+
+We transformed a 3,000-line `OrderManager` nightmare into a clean, testable, and extensible system. But remember: these are tools, not rules. Apply them thoughtfully based on what your application actually needs.
+
+If you found this helpful, check out my article on [Building a Robust Service Layer in Symfony](/blog/building-a-robust-service-layer-in-symfony), which complements these concepts with practical patterns for organizing business logic.
+
+Until next time, happy coding!
