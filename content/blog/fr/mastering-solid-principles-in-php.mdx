@@ -1,32 +1,32 @@
 ---
-title: "Understanding SOLID Principles in PHP: A Practical Guide"
-publishedAt: '2026-02-14'
-excerpt: "SOLID principles are the foundation of clean, maintainable object-oriented code. Learn how to apply these five principles in PHP with practical examples relevant to both Symfony and Laravel applications."
+title: "Maîtriser les Principes SOLID en PHP : Guide Pratique"
+publishedAt: '2026-02-17'
+excerpt: "Les principes SOLID sont le fondement d'un code orienté objet propre et maintenable. Apprenez à appliquer ces cinq principes en PHP avec des exemples pratiques pour Symfony et Laravel."
 category: 'Design Patterns'
 translationSlug: 'mastering-solid-principles-in-php'
 ---
 
-A few years ago, I worked on a codebase that had clearly evolved under pressure. There was a single class called `OrderManager` that contained more than 3,000 lines. It validated orders, calculated prices, applied discounts, managed inventory, sent emails, generated invoices, and so much more. Every time we needed to change something, we had to go through this large file and hope we didn't break anything.
+Il y a quelques années, j'ai travailler sur un code qui était vraiment difficile à maintenir. Il y avait une classe appelée `OrderManager` qui contenait plus de 3 000 lignes. Elle validait les commandes, calculait les prix, appliquait les remises, gérait l'inventaire, envoyait des emails, générait des factures, traitait les paiements, ... Chaque modification était difficile et risquée, il faut parcourir ce long fichier tout en espérant que rien ne se casse.
 
-That experience taught me something valuable: writing code that works is easy, but writing code that's maintainable, testable, and extensible requires following proven principles and design patterns.
+Cette expérience m'a appris quelque chose de précieux : écrire du code qui fonctionne est facile, mais écrire du code maintenable, testable et extensible nécessite de suivre des principes claires. Aujourd'hui, nous allons parler de SOLID, et voir comment écrire du code propre en utilisant ces 5 principes.
 
-## What is SOLID?
+## Qu'est-ce que SOLID ?
 
-SOLID is an acronym for five design principles introduced by Uncle Bob ([Robert C. Martin](https://en.wikipedia.org/wiki/Robert_C._Martin)) in the early 2000s. These principles help us write code that's easier to understand, maintain, and extend:
+SOLID est un acronyme pour cinq principes introduits par ([Robert C. Martin](https://en.wikipedia.org/wiki/Robert_C._Martin)) (Uncle Bob) au début des années 2000. Ces principes nous aident à écrire du code plus facile à comprendre, maintenir et étendre :
 
-- **S** for Single Responsibility Principle
-- **O** for Open/Closed Principle
-- **L** for Liskov Substitution Principle
-- **I** for Interface Segregation Principle
-- **D** for Dependency Inversion Principle
+- **S** pour Single Responsibility Principle (Principe de Responsabilité Unique)
+- **O** pour Open/Closed Principle (Principe Ouvert/Fermé)
+- **L** pour Liskov Substitution Principle (Principe de Substitution de Liskov)
+- **I** pour Interface Segregation Principle (Principe de Ségrégation des Interfaces)
+- **D** pour Dependency Inversion Principle (Principe d'Inversion des Dépendances)
 
-These aren't just academic concepts you have to memorize for a job interview. They're practical guidelines that can genuinely transform how you write code, no matter what framework you're using.
+Ce ne sont pas que des concepts académiques qu'il faut mémoriser. Ce sont des directives qui peuvent vraiment transformer notre façon d'écrire du code.
 
-## Our Example: E-Commerce Order Processing
+## Fil Rouge : Traitement de Commandes E-Commerce
 
-Throughout this article, we'll build an e-commerce order processing system together. I chose this example because it's complex enough to show all five principles in action.
+Tout au long de cet article, nous utiliserons un système de traitement de commandes e-commerce comme exemple. Ce domaine est suffisamment complexe pour démontrer efficacement les cinq principes.
 
-Let's start with what NOT to do. Here's the kind of "god class" I mentioned earlier, it's a single that does everything.
+Commençons par ce qu'il ne faut PAS faire. Voici le genre de classe qui fait tout ("god class") que j'ai mentionné plus haut :
 
 ```php
 <?php
@@ -42,7 +42,7 @@ class OrderManager
 
     public function processOrder(array $orderData): Order
     {
-        // Validate order data
+        // Valider les données de la commande
         if (empty($orderData['items'])) {
             throw new \InvalidArgumentException('Order must have items');
         }
@@ -56,13 +56,13 @@ class OrderManager
             }
         }
 
-        // Calculate subtotal
+        // Calculer le sous-total
         $subtotal = 0;
         foreach ($orderData['items'] as $item) {
             $subtotal += $item['price'] * $item['quantity'];
         }
 
-        // Apply discounts
+        // Appliquer les remises
         $discount = 0;
         if (isset($orderData['coupon'])) {
             if ($orderData['coupon'] === 'SAVE10') {
@@ -74,7 +74,7 @@ class OrderManager
             }
         }
 
-        // Calculate tax (VAT)
+        // Calculer les taxes (TVA)
         $taxableAmount = $subtotal - $discount;
         $country = $orderData['shipping_country'] ?? 'SN';
         if ($country === 'SN') {
@@ -89,7 +89,7 @@ class OrderManager
             $tax = $taxableAmount * 0.15;
         }
 
-        // Calculate shipping cost
+        // Calculer les frais de livraison
         $totalWeight = 0;
         foreach ($orderData['items'] as $item) {
             $totalWeight += ($item['weight'] ?? 0) * $item['quantity'];
@@ -97,14 +97,14 @@ class OrderManager
 
         $shippingMethod = $orderData['shipping_method'] ?? 'standard';
         if ($shippingMethod === 'standard') {
-            $shipping = $totalWeight * 500;
+            $shipping = $totalWeight * 0.5;
         } elseif ($shippingMethod === 'express') {
-            $shipping = $totalWeight * 1500;
-        } elseif ($shippingMethod === 'international') {
-            $shipping = $totalWeight * 5000;
+            $shipping = $totalWeight * 1.5;
+        } elseif ($shippingMethod === 'overnight') {
+            $shipping = $totalWeight * 3.0;
         }
 
-        // Check inventory
+        // Vérifier l'inventaire
         foreach ($orderData['items'] as $item) {
             $product = $this->em->find(Product::class, $item['product_id']);
             if ($product->getStock() < $item['quantity']) {
@@ -112,7 +112,7 @@ class OrderManager
             }
         }
 
-        // Create order
+        // Créer la commande
         $order = new Order();
         $order->setSubtotal($subtotal);
         $order->setDiscount($discount);
@@ -121,7 +121,7 @@ class OrderManager
         $order->setTotal($subtotal - $discount + $tax + $shipping);
         $order->setStatus('pending');
 
-        // Save order and update inventory
+        // Sauvegarder la commande et mettre à jour l'inventaire
         $this->em->persist($order);
         foreach ($orderData['items'] as $item) {
             $product = $this->em->find(Product::class, $item['product_id']);
@@ -129,7 +129,7 @@ class OrderManager
         }
         $this->em->flush();
 
-        // Send confirmation email
+        // Envoyer l'email de confirmation
         $email = (new Email())
             ->to($orderData['customer_email'])
             ->subject('Order Confirmation #' . $order->getId())
@@ -139,34 +139,32 @@ class OrderManager
         return $order;
     }
 
-    // Plus many more methods for refunds, cancellations, reports...
+    // Plus de nombreuses autres méthodes pour les remboursements, annulations, rapports...
 }
 ```
 
-This class is doing way too much, and updating it is a nightmare. Let's see how SOLID principles help us fix this mess.
+Cette classe fait beaucoup trop de choses, on dit qu'elle a beaucoup de responsabilités. Voyons comment les principes SOLID nous aident à résoudre ce problème.
 
-## S - Single Responsibility Principle (SRP)
+## S - Principe de Responsabilité Unique (SRP)
 
-> "A class should have one, and only one, reason to change."
+> "Une classe ne devrait avoir qu'une seule raison de changer."
 > — Robert C. Martin
 
-The Single Responsibility Principle states that a class should have only one job. If a class has multiple responsibilities, changes to one responsibility might affect or break the others.
+Le Principe de Responsabilité Unique stipule qu'une classe ne devrait avoir qu'une seule responsabilité. Si une classe a plusieurs responsabilités, les changements sur une responsabilité pourraient affecter ou casser les autres.
 
-### The Problem
+### Le Problème
 
-Looking at our `OrderManager`, I count at least five reasons why we might need to modify it:
+En regardant la classe `OrderManager`, il y a au moins cinq raisons de la modifier :
 
-1. Validation rules change
-2. Price calculation logic changes
-3. Tax rules change
-4. Shipping calculation changes
-5. Notification requirements change
+1. Les règles de validation changent
+2. La logique de calcul des prix change
+3. Les règles des taxes changent
+4. Le calcul des frais de livraison change
+5. Le système de notification change
 
-Every time any of these change, we're modifying the same massive file. That's five opportunities for something to go wrong.
+### La Solution
 
-### The Solution
-
-Let's split this into focused, single-purpose classes:
+Créons différentes classes qui ont exactement une responsabilité :
 
 ```php
 <?php
@@ -255,7 +253,7 @@ class DiscountCalculator
 {
     public function calculate(float $subtotal, ?string $couponCode): float
     {
-        if (empty($couponCode)) {
+        if ($couponCode === null) {
             return 0.0;
         }
 
@@ -333,7 +331,9 @@ class OrderNotificationService
 }
 ```
 
-Now our main `OrderService` becomes a coordinator. It doesn't know **how** to validate or calculate taxes. It just knows **who** to ask:
+Nous avons là différentes classe qui on chacune une seule responsabilité : envoyer un mail, calculer les taxes, valider la commande, ...
+
+Maintenant la classe principale `OrderService` devient un simple coordinateur qui va déléguer aux autres classes :
 
 ```php
 <?php
@@ -382,18 +382,18 @@ class OrderService
 }
 ```
 
-Much better. Now when the tax rules change for a new country, we only need to update `TaxCalculator`. The rest of the system doesn't care.
+Ce n'est pas beau ça? Le code est beaucoup plus propre et maintenable, si je veux modifier les règles de calcul de la taxe, je pars modifier la classe `TaxCalculator`, simple et pratique.
 
-## O - Open/Closed Principle (OCP)
+## O - Principe Ouvert/Fermé (OCP)
 
-> "Software entities should be open for extension, but closed for modification."
+> "Les entités logicielles doivent être ouvertes à l'extension, mais fermées à la modification."
 > — Bertrand Meyer
 
-This one sounds like a riddle 😀, but it's actually practical: you should be able to add new features without changing existing code. How? Through interfaces and polymorphism.
+Le Principe Ouvert/Fermé signifie que nous devrions pouvoir ajouter de nouvelles fonctionnalités sans modifier le code existant. Cela est généralement réalisé grâce aux interfaces et au polymorphisme.
 
-### The Problem
+### Le Problème
 
-Look at our `DiscountCalculator`:
+Regardons la classe `DiscountCalculator` :
 
 ```php
 public function calculate(float $subtotal, ?string $couponCode): float
@@ -407,18 +407,16 @@ public function calculate(float $subtotal, ?string $couponCode): float
 }
 ```
 
-Every time marketing comes up with a new promotion (and believe me they always do), we need to modify this file and add another case. They can come up with discounts like:
+Chaque fois que l'équipe marketing veut ajouter un nouveau type de remise (et crois-moi il y en aura toujours), nous devons modifier cette classe. On veut par exemple ajouter ces types de remise :
 
-- Buy-one-get-one-free
-- Tiered discounts based on cart value
-- First-time customer discounts
-- Seasonal promotions
+- Un article acheté, un offert ?
+- Des remises selon la valeur du panier ?
+- Des remises pour les nouveaux clients ?
+- Des promotions saisonnières ?
 
-Each new requirement means modifying `DiscountCalculator`. That's a violation of the OCP, and it's also risky, every change could accidentally break existing discount logic.
+### La Solution
 
-### The Solution
-
-Instead of one class that knows all discount types, let's create a system where each discount type is its own class:
+Au lieu d'une seule classe `DiscountCalculator` qui gère toutes les règles de remises, nous allons créer un système où chaque règle de remise est sa propre classe. Pour cela nous allons définir une interface `DiscountRuleInterface` dont chaque règle de remise implémentera :
 
 ```php
 <?php
@@ -441,20 +439,20 @@ interface DiscountRuleInterface
 namespace App\Discount;
 
 /**
- * DTO that carries order information to discount rules.
+ * DTO qui transporte les informations de commande vers les règles de remise.
  */
 readonly class OrderContext
 {
     public function __construct(
-        public array $items,
         public float $subtotal,
         public ?string $couponCode,
         public ?Customer $customer,
+        public array $items,
     ) {}
 }
 ```
 
-Now each discount rule is self-contained:
+Maintenant créons des règles de remise individuelles :
 
 ```php
 <?php
@@ -463,7 +461,7 @@ namespace App\Discount\Rule;
 
 class PercentageCouponRule implements DiscountRuleInterface
 {
-    // You'll probably get these from a database or somewhere else
+    // Tu vas probablement définir ceci dans une base de données ou quelque part ailleurs
     private const COUPONS = [
         'SAVE10' => 0.10,
         'SAVE20' => 0.20,
@@ -533,7 +531,7 @@ class FirstTimeCustomerRule implements DiscountRuleInterface
 
     public function calculate(OrderContext $context): float
     {
-        return $context->subtotal * 0.15;
+        return $context->subtotal * 0.15; // 15% de réduction sur la première commande
     }
 
     public function getPriority(): int
@@ -552,12 +550,12 @@ class BulkPurchaseRule implements DiscountRuleInterface
 {
     public function supports(OrderContext $context): bool
     {
-        return $context->subtotal >= 100000; // 100,000 XOF
+        return $context->subtotal >= 100000; // 100 000 XOF
     }
 
     public function calculate(OrderContext $context): float
     {
-        // 5% discount for orders over 100,000 XOF
+        // 5% de réduction pour les commandes de plus de 100 000 XOF
         return $context->subtotal * 0.05;
     }
 
@@ -568,7 +566,7 @@ class BulkPurchaseRule implements DiscountRuleInterface
 }
 ```
 
-The calculator just loops through rules and uses the first one that applies:
+Maintenant la classe `DiscountCalculator` utilise juste les règles qui s'appliquent :
 
 ```php
 <?php
@@ -590,7 +588,7 @@ class DiscountCalculator
             ? iterator_to_array($rules)
             : $rules;
 
-        // Sort by priority (highest first)
+        // Trier par priorité (la plus haute en premier)
         usort($this->rules, fn($a, $b) => $b->getPriority() <=> $a->getPriority());
     }
 
@@ -607,9 +605,9 @@ class DiscountCalculator
 }
 ```
 
-### Framework Notes
+### Notes
 
-**Symfony**: Use the `#[AutowireIterator]` attribute combined with tagged services:
+**Symfony** : Utilise l'attribut `#[AutowireIterator]` combiné avec les services tagués :
 
 ```yaml
 # config/services.yaml
@@ -619,9 +617,9 @@ services:
             tags: ['app.discount_rule']
 ```
 
-The `#[AutowireIterator]` attribute in the constructor automatically injects all services tagged with `app.discount_rule`.
+L'attribut `#[AutowireIterator]` dans le constructeur injecte automatiquement tous les services tagués avec `app.discount_rule`.
 
-**Laravel**: Use tagged bindings with `giveTagged`:
+**Laravel** : Utilise les bindings tagués avec `giveTagged` :
 
 ```php
 // AppServiceProvider.php
@@ -640,22 +638,22 @@ public function register(): void
 }
 ```
 
-Now when marketing wants a "Black Friday 50% off" rule, we just add a new class. No existing code changes. That's the power of the OCP.
+Maintenant quand l'équipe marketing veut ajouter un nouveau type de remise, nous ajoutons simplement une nouvelle classe implémentant `DiscountRuleInterface`. Nous ajoutons donc une nouvelle fonctionnalité sans modifier le code existant.
 
-## L - Liskov Substitution Principle (LSP)
+## L - Principe de Substitution de Liskov (LSP)
 
-> "If S is a subtype of T, then objects of type T may be replaced with objects of type S without altering the correctness of the program."
+> "Si S est un sous-type de T, alors les objets de type T peuvent être remplacés par des objets de type S sans altérer la correction du programme."
 > — Barbara Liskov
 
-I agree with you, the formal definition is really scary. Let's translate it in plain English:
+Alors là, à lire la définition, on est perdus. On va donc traduire en Français simple :
 
-> If your code expects a `ShippingCalculator`, any class implementing that interface should work without surprises. No special cases, no "oh but this one is different."
+> Si votre code attend un objet de type `ShippingCalculator`, tout appel à une méthode de cet objet devrait fonctionner sans que le programme ne soit altéré. Pas de cas spécial, pas de "oh mais c'est différent".
 
-I hope it's clearer now.
+Expliquons avec un exemple plutôt.
 
-### The Problem
+### Le Problème
 
-Let's say we have shipping calculators:
+Supposons que nous avons différents calculateurs de frais de livraison, nous allons livrer dans le pays, dans la region Ouest-Africaine et à l'internationale.
 
 ```php
 <?php
@@ -679,7 +677,7 @@ class StandardShippingCalculator implements ShippingCalculatorInterface
     {
         $weight = $this->calculateTotalWeight($items);
 
-        return $weight * 500; // 500 XOF per kg
+        return $weight * 500; // 500 XOF par kg
     }
 
     private function calculateTotalWeight(array $items): float
@@ -693,35 +691,35 @@ class StandardShippingCalculator implements ShippingCalculatorInterface
 }
 ```
 
-Now someone adds express shipping with a clever "optimization":
+Maintenant on ajoute un calculateur de frais de livraison express qui viole le contrat :
 
 ```php
 <?php
 
 namespace App\Shipping;
 
-// BAD: Violates LSP
+// MAUVAIS : Viole LSP
 class ExpressShippingCalculator implements ShippingCalculatorInterface
 {
     public function calculate(array $items, string $destination): float
     {
-        // Only available for West African countries!
+        // Disponible uniquement pour les pays d'Afrique de l'Ouest !
         if (!$this->isWestAfrican($destination)) {
-            return -1; // Magic value to indicate unavailability
+            return -1; // Valeur magique pour indiquer l'indisponibilité et c'est lui le problème
         }
 
         $weight = $this->calculateTotalWeight($items);
 
-        return $weight * 1500; // 1500 XOF per kg
+        return $weight * 1500; // 1500 XOF par kg
     }
 }
 ```
 
-See the problem? The interface says `calculate()` returns a shipping cost. But this implementation sometimes returns `-1` to mean "not available." Now every caller needs special code to handle this magic value. We've broken the contract.
+Tu vois le problème ? L'interface dit que `calculate()` retourne un prix. Mais cette implémentation retourne `-1` dès fois pour indiquer que la méthode de livraison n'est pas disponible. Maintenant il faudra toujours faire un `if` dans le code qui appelle cette méthode pour vérifier si la livraison est disponible. Nous avons failli au contrat.
 
-### The Solution
+### La Solution
 
-Instead of sneaking in special return values, make the contract explicit:
+Il faut respecter le contrat (comme dans la vraie vie quoi). Si le contrat dit que la méthode retourne un prix, alors elle doit retourner un prix.
 
 ```php
 <?php
@@ -731,14 +729,14 @@ namespace App\Shipping;
 interface ShippingCalculatorInterface
 {
     /**
-     * Check if this shipping method is available for the given parameters.
+     * Nous ajoutons une méthode pour vérifier la disponibilité
      */
     public function isAvailable(array $items, string $destination): bool;
 
     /**
-     * Calculate shipping cost.
+     * Calcule le coût de livraison.
      *
-     * @throws ShippingUnavailableException if called when not available
+     * @throws ShippingUnavailableException si appelé quand non disponible
      */
     public function calculate(array $items, string $destination): float;
 
@@ -746,7 +744,7 @@ interface ShippingCalculatorInterface
 }
 ```
 
-We can also extract the shared weight calculation into an abstract base class:
+On peut aussi extraire la méthode partagée `calculateTotalWeight` dans une classe abstraite pour éviter la répétition :
 
 ```php
 <?php
@@ -775,17 +773,17 @@ class StandardShippingCalculator extends AbstractShippingCalculator
 {
     public function isAvailable(array $items, string $destination): bool
     {
-        return true; // Always available
+        return true; // Toujours disponible
     }
 
     public function calculate(array $items, string $destination): float
     {
-        return $this->calculateTotalWeight($items) * 500; // 500 XOF per kg
+        return $this->calculateTotalWeight($items) * 500; // 500 XOF par kg
     }
 
     public function getName(): string
     {
-        return 'Standard Shipping';
+        return 'Livraison Standard';
     }
 }
 ```
@@ -808,16 +806,16 @@ class ExpressShippingCalculator extends AbstractShippingCalculator
     {
         if (!$this->isAvailable($items, $destination)) {
             throw new ShippingUnavailableException(
-                "Express shipping is not available for {$destination}"
+                "La livraison express n'est pas disponible pour {$destination}"
             );
         }
 
-        return $this->calculateTotalWeight($items) * 1500; // 1500 XOF per kg
+        return $this->calculateTotalWeight($items) * 1500; // 1500 XOF par kg
     }
 
     public function getName(): string
     {
-        return 'Express Shipping';
+        return 'Livraison Express';
     }
 }
 ```
@@ -833,7 +831,7 @@ class InternationalShippingCalculator extends AbstractShippingCalculator
 
     public function isAvailable(array $items, string $destination): bool
     {
-        // Only for destinations outside West Africa
+        // Uniquement pour les destinations hors Afrique de l'Ouest
         return !in_array($destination, self::WEST_AFRICAN_COUNTRIES, true);
     }
 
@@ -841,14 +839,14 @@ class InternationalShippingCalculator extends AbstractShippingCalculator
     {
         if (!$this->isAvailable($items, $destination)) {
             throw new ShippingUnavailableException(
-                "International shipping is only for destinations outside West Africa"
+                "La livraison internationale est uniquement pour les destinations hors Afrique de l'Ouest"
             );
         }
 
         $weight = $this->calculateTotalWeight($items);
-        $baseRate = $weight * 5000; // 5000 XOF per kg base rate
+        $baseRate = $weight * 5000; // 5000 XOF par kg tarif de base
 
-        // Additional fees for certain regions
+        // Frais supplémentaires pour certaines régions
         return match (true) {
             in_array($destination, ['FR', 'BE', 'CH']) => $baseRate * 1.2,
             in_array($destination, ['US', 'CA']) => $baseRate * 1.5,
@@ -859,12 +857,12 @@ class InternationalShippingCalculator extends AbstractShippingCalculator
 
     public function getName(): string
     {
-        return 'International Shipping';
+        return 'Livraison Internationale';
     }
 }
 ```
 
-Now the shipping service can work with any calculator without surprises:
+Maintenant le service de livraison peut utiliser n'importe quel calculateur de frais de livraison en toute sécurité :
 
 ```php
 <?php
@@ -901,25 +899,25 @@ class ShippingService
 }
 ```
 
-No type checking. No magic values. Every calculator is truly substitutable because they all honor the same contract.
+Pas de vérification de type, pas de cas spéciaux. Chaque calculateur est substituable car ils respectent tous le même contrat.
 
-## I - Interface Segregation Principle (ISP)
+## I - Principe de Ségrégation des Interfaces (ISP)
 
-> "Clients should not be forced to depend on interfaces they do not use."
+> "Les clients ne devraient pas être forcés de dépendre d'interfaces qu'ils n'utilisent pas."
 > — Robert C. Martin
 
-Ever implemented an interface and found yourself writing `throw new \RuntimeException('Not implemented')` for half the methods? That's a code smell, and ISP is the cure.
+T'es tu déjà retrouver à implémenter une interface et à devoir écrire des `throw new \RuntimeException('Not implemented')` pour certaines méthodes? Ceci est un problème et ce principe est la solution.
 
-### The Problem
+### Le Problème
 
-Imagine we got ambitious and created this:
+Imagine que nous avons créé une interface de traitement de commande "complète" :
 
 ```php
 <?php
 
 namespace App\Order;
 
-// BAD: Fat interface
+// MAUVAIS : Interface trop grosse
 interface OrderProcessorInterface
 {
     public function validateOrder(Order $order): bool;
@@ -938,11 +936,11 @@ interface OrderProcessorInterface
 }
 ```
 
-Now you need a simple service that only validates orders. Too bad, you're implementing 13 methods anyway. Most will be empty or throw exceptions. That's not just annoying. It's misleading. Someone reading your class might think it actually does all those things.
+Maintenant imagine que tu as besoin d'un simple service qui ne fait que valider les commandes. Tu devrais implémenter les 13 méthodes, en lançant des exceptions ou en retournant des nulls pour celles dont tu n'as pas besoin.
 
-### The Solution
+### La Solution
 
-Break it up. Each interface should represent one cohesive capability:
+Divise cette grosse interface en interfaces focalisées et cohérentes, un peu comme pour le SRP :
 
 ```php
 <?php
@@ -966,6 +964,17 @@ interface OrderPricingInterface
     public function calculateTax(Order $order): float;
     public function calculateShipping(Order $order): float;
     public function calculateTotal(Order $order): float;
+}
+```
+
+```php
+<?php
+
+namespace App\Order;
+
+interface DiscountApplierInterface
+{
+    public function apply(Order $order, string $code): DiscountResult;
 }
 ```
 
@@ -999,6 +1008,17 @@ interface PaymentProcessorInterface
 
 namespace App\Order;
 
+interface InvoiceGeneratorInterface
+{
+    public function generate(Order $order): Invoice;
+}
+```
+
+```php
+<?php
+
+namespace App\Order;
+
 interface OrderNotifierInterface
 {
     public function sendConfirmation(Order $order): void;
@@ -1006,14 +1026,26 @@ interface OrderNotifierInterface
 }
 ```
 
-Now classes can implement only what they actually need:
+```php
+<?php
+
+namespace App\Order;
+
+interface ShipmentManagerInterface
+{
+    public function createLabel(Order $order): ShippingLabel;
+    public function track(Order $order): TrackingInfo;
+}
+```
+
+Maintenant nous allons implémenter uniquement ce dont nous avons besoin :
 
 ```php
 <?php
 
 namespace App\Order;
 
-class OrderValidator implements OrderValidatorInterface
+class SimpleOrderValidator implements OrderValidatorInterface
 {
     public function validate(Order $order): ValidationResult
     {
@@ -1032,7 +1064,7 @@ class OrderValidator implements OrderValidatorInterface
 }
 ```
 
-And the main service only depends on what it needs:
+Et le service principal peut dépendre exactement de ce dont il a besoin :
 
 ```php
 <?php
@@ -1076,32 +1108,36 @@ class OrderService
 }
 ```
 
-Both Symfony and Laravel follow ISP in their own contracts. Symfony has `CacheInterface` separate from `CacheItemPoolInterface`. Laravel keeps `Illuminate\Contracts\Cache\Repository` distinct from `Illuminate\Contracts\Cache\Store`.
+### Notes
 
-## D - Dependency Inversion Principle (DIP)
+**Symfony** : Le framework lui-même suit ISP. Les contrats comme `CacheInterface` vs `CacheItemPoolInterface` qui n'a que les méthodes dont tu as réellement besoin.
 
-> "High-level modules should not depend on low-level modules. Both should depend on abstractions."
+**Laravel** : Les contrats de Laravel suivent aussi ce principe. `Illuminate\Contracts\Cache\Repository` est séparé de `Illuminate\Contracts\Cache\Store`, chacun servant des besoins différents.
+
+## D - Principe d'Inversion des Dépendances (DIP)
+
+> "Les modules de haut niveau ne devraient pas dépendre des modules de bas niveau. Les deux devraient dépendre d'abstractions."
 > — Robert C. Martin
 
-This is about decoupling. Instead of your code depending on specific implementations (Stripe, MySQL, Redis), it should depend on interfaces. The implementations become plug-and-play.
+Le Principe d'Inversion des Dépendances consiste à découpler ton code des implémentations concrètes. Au lieu de dépendre de classes spécifiques, dépends d'interfaces.
 
-### The Problem
+### Le Problème
 
-Here's a service that's tied to its dependencies:
+Voici un service qui viole DIP :
 
 ```php
 <?php
 
 namespace App\Order;
 
-// BAD: Depends on concrete implementations
+// MAUVAIS : Dépend d'implémentations concrètes
 class OrderService
 {
     public function __construct(
-        private readonly StripePaymentGateway $paymentGateway,
-        private readonly MySQLOrderRepository $orderRepository,
-        private readonly SmtpEmailService $emailService,
-        private readonly RedisCache $cache,
+        private readonly StripePaymentGateway $paymentGateway, // Concret !
+        private readonly MySQLOrderRepository $orderRepository, // Concret !
+        private readonly SmtpEmailService $emailService, // Concret !
+        private readonly RedisCache $cache, // Concret !
     ) {}
 
     public function process(Order $order): void
@@ -1114,15 +1150,15 @@ class OrderService
 }
 ```
 
-Problems:
+Problèmes avec cette approche :
 
-1. **Switching is painful**: Want to use PayPal? Change the code everywhere.
-2. **Testing is a nightmare**: You need real Stripe keys, a MySQL database, Redis server, and SMTP server just to run tests.
-3. **Too much knowledge**: This class knows it's using Stripe, MySQL, Redis, SMTP. It shouldn't care.
+1. **Impossible de changer d'implémentation** : Tu veux utiliser PayPal au lieu de Stripe ? Change le code.
+2. **Difficile à tester** : Tu as besoin d'un vrai compte Stripe, d'une base de données MySQL, d'un serveur Redis et d'un serveur SMTP pour tester.
+3. **Couplage fort** : Le service en sait trop sur ses dépendances. Il ne devrait pas.
 
-### The Solution
+### La Solution
 
-Define interfaces for what you need:
+Il faut dépendre d'abstractions :
 
 ```php
 <?php
@@ -1149,7 +1185,18 @@ interface OrderRepositoryInterface
 }
 ```
 
-Then implement them:
+```php
+<?php
+
+namespace App\Notification;
+
+interface NotificationServiceInterface
+{
+    public function send(Notification $notification): void;
+}
+```
+
+Maintenant on crée des implémentations concrètes :
 
 ```php
 <?php
@@ -1164,12 +1211,12 @@ class StripePaymentGateway implements PaymentGatewayInterface
 
     public function charge(float $amount, PaymentMethod $method): PaymentResult
     {
-        // Stripe-specific implementation
+        // Implémentation spécifique à Stripe
     }
 
     public function refund(string $transactionId, float $amount): RefundResult
     {
-        // Stripe refund implementation
+        // Implémentation du remboursement Stripe
     }
 }
 ```
@@ -1188,17 +1235,17 @@ class PayPalPaymentGateway implements PaymentGatewayInterface
 
     public function charge(float $amount, PaymentMethod $method): PaymentResult
     {
-        // PayPal-specific implementation
+        // Implémentation spécifique à PayPal
     }
 
     public function refund(string $transactionId, float $amount): RefundResult
     {
-        // PayPal refund implementation
+        // Implémentation du remboursement PayPal
     }
 }
 ```
 
-For testing, create a fake that's fast and predictable:
+Et une classe fake pour les tests :
 
 ```php
 <?php
@@ -1230,7 +1277,7 @@ class FakePaymentGateway implements PaymentGatewayInterface
         return RefundResult::success();
     }
 
-    // Test helpers
+    // Helpers de test
     public function failNextCharge(): void
     {
         $this->shouldFail = true;
@@ -1243,7 +1290,7 @@ class FakePaymentGateway implements PaymentGatewayInterface
 }
 ```
 
-Now the service depends only on abstractions:
+Maintenant le service dépend des abstractions :
 
 ```php
 <?php
@@ -1283,9 +1330,9 @@ class OrderService
 }
 ```
 
-### Configuring the Container
+### Notes
 
-**Symfony**:
+**Symfony** : Configure quelle implémentation utiliser dans services.yaml :
 
 ```yaml
 # config/services.yaml
@@ -1293,13 +1340,14 @@ services:
     App\Payment\PaymentGatewayInterface:
         alias: App\Payment\StripePaymentGateway
 
-    # Swap to fake in tests
+    # Ou pour des bindings spécifiques à l'environnement :
     App\Payment\PaymentGatewayInterface:
         alias: App\Tests\Mocks\FakePaymentGateway
+        # Uniquement en environnement de test
         when@test: true
 ```
 
-**Laravel**:
+**Laravel** : Lie les interfaces aux implémentations dans un service provider :
 
 ```php
 // AppServiceProvider.php
@@ -1310,6 +1358,7 @@ public function register(): void
         StripePaymentGateway::class
     );
 
+    // Ou conditionnellement :
     if ($this->app->environment('testing')) {
         $this->app->bind(
             PaymentGatewayInterface::class,
@@ -1319,17 +1368,15 @@ public function register(): void
 }
 ```
 
-Now switching payment providers or running tests is just a configuration change. The `OrderService` doesn't know or care what's behind the interface.
+## Comment les Principes SOLID Fonctionnent Ensemble
 
-## How They All Work Together
+Ces principes ne sont pas destinés à être appliqués séparément. Ils se renforcent mutuellement :
 
-These principles aren't meant to be applied in isolation. They reinforce each other:
+- **SRP + OCP** : Quand les classes ont des responsabilités uniques, elles sont naturellement plus faciles à étendre sans modification.
+- **LSP + ISP** : Les interfaces facilitent la création d'implémentations substituables.
+- **DIP + Tous les autres** : Dépendre des abstractions permet à tous les autres principes de fonctionner correctement.
 
-- **SRP + OCP**: Classes with single responsibilities are naturally easier to extend without modification.
-- **LSP + ISP**: Smaller, focused interfaces make it easier to create proper substitutable implementations.
-- **DIP + Everything**: Depending on abstractions is what makes all the other principles practical.
-
-Here's our final `OrderService`:
+Voici comment notre système de commandes refactorisé démontre cette synergie :
 
 ```php
 <?php
@@ -1339,44 +1386,44 @@ namespace App\Order;
 class OrderService
 {
     public function __construct(
-        private readonly OrderValidatorInterface $validator,        // DIP: abstraction
-        private readonly InventoryManagerInterface $inventory,      // DIP: abstraction
-        private readonly DiscountCalculator $discountCalculator,    // OCP: extensible
-        private readonly OrderPricingInterface $pricing,            // ISP: focused interface
-        private readonly PaymentGatewayInterface $payment,          // DIP + LSP: substitutable
-        private readonly OrderRepositoryInterface $repository,      // DIP: abstraction
-        private readonly OrderNotifierInterface $notifier,          // ISP: focused interface
+        private readonly OrderValidatorInterface $validator,        // DIP : abstraction
+        private readonly InventoryManagerInterface $inventory,      // DIP : abstraction
+        private readonly DiscountCalculator $discountCalculator,    // OCP : extensible
+        private readonly OrderPricingInterface $pricing,            // ISP : interface focalisée
+        private readonly PaymentGatewayInterface $payment,          // DIP + LSP : substituable
+        private readonly OrderRepositoryInterface $repository,      // DIP : abstraction
+        private readonly OrderNotifierInterface $notifier,          // ISP : interface focalisée
     ) {}
 
-    // SRP: This class only coordinates the order process
+    // SRP : Cette classe ne fait que coordonner le processus de commande
     public function checkout(Order $order, PaymentMethod $method): CheckoutResult
     {
-        // Each step is handled by a focused service (SRP)
-        // We can swap implementations easily (DIP + LSP)
-        // We can add new discount rules without changing this code (OCP)
-        // Each interface is focused on what we need (ISP)
+        // Chaque étape est gérée par un service focalisé (SRP)
+        // Nous pouvons facilement échanger les implémentations (DIP + LSP)
+        // Nous pouvons ajouter de nouvelles règles de remise sans changer ce code (OCP)
+        // Chaque interface est focalisée sur ce dont nous avons besoin (ISP)
     }
 }
 ```
 
-## When NOT to Apply SOLID
+## Quand NE PAS Appliquer SOLID
 
-Here's the thing: SOLID principles are guidelines, not commandments. Over-applying them leads to a different kind of mess: over-engineering, and we don't want that.
+Les principes SOLID sont des directives, pas des lois. Les sur-appliquer peut mener à de la sur-ingénierie (over-engineering).
 
-### Warning Signs of Over-Engineering
+### Signes d'Alerte de Sur-Ingénierie
 
-1. **Too many tiny classes**: If you have `StringValidator`, `IntegerValidator`, `EmailValidator`, `PhoneValidator` each in separate files for a simple contact form... You might have gone too far. It's okay to have one `FormValidator`.
+1. **Trop de petites classes** : Si tu as `StringValidator`, `IntegerValidator`, `EmailValidator`, `PhoneValidator` chacun dans des fichiers séparés pour un simple formulaire, tu es peut-être allé trop loin.
 
-2. **Interfaces with one implementation**: Creating `UserServiceInterface` that only `UserService` will ever implement? Ask yourself why. Interfaces are for polymorphism. If there's no variation, you don't need one.
+2. **Interfaces avec une seule implémentation** : Si tu crées `UserServiceInterface` qui est seulement implémenté par `UserService`, demande-toi pourquoi.
 
-3. **Premature abstraction**: Don't create `PaymentGatewayInterface` if you only support Stripe and have zero plans for others. YAGNI (You Ain't Gonna Need It) is also a principle.
+3. **Abstraction prématurée** : Ne crée pas `PaymentGatewayInterface` si tu ne supportes que Stripe et n'as aucun plan pour en ajouter d'autres.
 
-4. **Layers of indirection**: If understanding a simple operation requires jumping through 10 classes, you've over-abstracted.
+4. **Couches d'indirection** : Si comprendre une opération simple nécessite de naviguer à travers 10 classes, tu as trop abstrait.
 
-### Sometimes Simple is Right
+### Quand Garder les Choses Simples
 
 ```php
-// This is fine for a simple app
+// Ceci marche bien pour une application simple
 class UserService
 {
     public function __construct(
@@ -1397,27 +1444,29 @@ class UserService
 }
 ```
 
-Don't create `UserCreatorInterface`, `UserFactoryInterface`, `PasswordHasherInterface`, and `UserPersisterInterface` unless you actually need that flexibility.
+Ne crée pas `UserCreatorInterface`, `UserFactoryInterface`, `PasswordHasherInterface`, et `UserPersisterInterface` à moins que tu aies vraiment besoin de cette flexibilité.
 
-### Rules of Thumb
+### Règles Générales
 
-1. **Start simple**: Write working code first, then refactor when complexity demands it. But don't forget to refactor, that's how we ended up with the `OrderManager` monster.
-2. **Rule of Three**: Consider abstracting when you need the same behavior in three places. Not before.
-3. **Listen to pain**: If changing one thing breaks another, or testing is hard, SOLID can help.
-4. **Think about your team**: Architecture that only you understand defeats the purpose.
+1. **Commence simple** : Écris d'abord du code qui fonctionne, puis refactorise quand la complexité l'exige. Mais n'oublie de refactoriser, c'est comme ça que l'on fini avec la classe `OrderManager` mentionnée plus haut.
+2. **Suis la Règle des Trois** : Envisage d'abstraire quand tu as besoin du même comportement à trois endroits.
+3. **Sois attentif** : Si changer une chose en casse une autre, ou si les tests sont difficiles, SOLID peut aider.
+4. **Considère ton équipe** : Une architecture trop complexe que tes coéquipiers ne peuvent pas comprendre va à l'encontre du but recherché.
 
 ## Conclusion
 
-SOLID principles are powerful tools for writing maintainable code:
+Les principes SOLID sont des outils puissants pour écrire du code maintenable :
 
-- **Single Responsibility**: One class, one reason to change
-- **Open/Closed**: Extend through new code, not modifications
-- **Liskov Substitution**: Subclasses must honor their parent's contract
-- **Interface Segregation**: Many small interfaces beat one bloated one
-- **Dependency Inversion**: Depend on abstractions, not concretions
+- **Responsabilité Unique** : Une classe, une raison de changer
+- **Ouvert/Fermé** : Étendre via du nouveau code, pas de modifications
+- **Substitution de Liskov** : Les sous-classes doivent honorer le contrat de leur parent
+- **Ségrégation des Interfaces** : Plusieurs petites interfaces valent mieux qu'une grande
+- **Inversion des Dépendances** : Dépends des abstractions, pas des concrétions
 
-We transformed a 3,000-line `OrderManager` nightmare into a clean, testable, and extensible system. But remember: these are tools, not rules. Apply them thoughtfully based on what your application actually needs.
+Ces principes nous ont aidé à transformer un cauchemar de 3 000 lignes dans `OrderManager` en un système propre, testable et extensible. Mais rappelle-toi : ce sont des outils, pas des lois. Applique-les judicieusement en fonction des besoins réels de ton application.
 
-If you found this helpful, check out my article on [Building a Robust Service Layer in Symfony](/blog/building-a-robust-service-layer-in-symfony), which complements these concepts with practical patterns for organizing business logic.
+Si tu as trouvé cet article utile, consulte mon article sur [Building a Robust Service Layer in Symfony](/blog/building-a-robust-service-layer-in-symfony), qui complète ces concepts avec des patterns pratiques pour organiser la logique métier.
 
-Until next time, happy coding!
+Dans un prochain tutoriel, nous explorerons le Pattern Adapter et verrons comment il peut nous aider à créer des interfaces unifiées pour différents services externes, comme les passerelles de paiement dont nous avons discuté ici.
+
+À la prochaine, bon code !
