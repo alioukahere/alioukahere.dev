@@ -1,6 +1,6 @@
 ---
 title: "The Adapter Pattern in Symfony: Creating Flexible Payment Integrations"
-publishedAt: '2026-01-27'
+publishedAt: '2026-02-24'
 excerpt: "The Adapter pattern allows incompatible interfaces to work together by creating a unified interface. Learn how to use it to build flexible, extensible payment gateway integrations in Symfony."
 category: 'Design Patterns'
 ---
@@ -18,13 +18,13 @@ $result = match ($paymentMethod) {
 };
 ```
 
-Every time we need to add a new payment gateway, we have to modify this service. That's not great. Today, we're going to fix it using the Adapter Pattern.
+Every time we need to add a new payment gateway, we have to modify this service. That's not great, we're violating the [Open/Closed Principle of SOLID](/blog/mastering-solid-principles-in-php). Today, we're going to fix it using the Adapter Pattern.
 
 ## What is the Adapter Pattern?
 
 Think of the Adapter Pattern like a power adapter when you travel internationally. Your laptop has a specific plug type, but the wall outlet in another country has a different shape. The power adapter sits between them, making two incompatible interfaces work together without modifying either one.
 
-// include image of a power adapter
+![Power Adapter Image](https://m.media-amazon.com/images/I/41TpcSAICUL._AC_UF1000,1000_QL80_.jpg)
 
 In software terms, the Adapter Pattern creates a bridge between your application's expected interface and the various third-party implementations you need to integrate with.
 
@@ -110,7 +110,7 @@ Three problems stand out:
 
 1. **The service knows too much**: It contains implementation details for every payment gateway, PayPal OAuth flows, Stripe session creation, Wave's API quirks, and Orange Money's authentication.
 
-2. **Adding new gateways means modifying the service**: Want to add CinetPay (another popular West African payment gateway)? You need to add a new private method, update the `match` statement, and add another API key to the constructor.
+2. **Adding new gateways means modifying the service**: Want to add CinetPay? You need to add a new private method, update the `match` statement, and add another API key to the constructor.
 
 3. **Testing is painful**: To test the payment flow, you either need to mock the HTTP client for each gateway's specific requests or use real API calls in test mode.
 
@@ -973,7 +973,7 @@ public function createPayment(PaymentRequest $request): PaymentResponse
 
 ### Use DTOs for Data Transfer
 
-DTOs create a clean boundary between your application and external services. They make your contracts explicit and provide a single place to validate and transform data.
+DTOs create a clean boundary between your application and external services. They make your contracts explicit and provide a single place to validate and transform data. Don't just rely on arrays (develop a little bit...)
 
 ### Handle Errors Gracefully
 
