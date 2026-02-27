@@ -1,0 +1,50 @@
+---
+import BlogPostCard from '@/components/blog/BlogPostCard.astro'
+import type { BlogPost, Locale } from '@/types'
+
+interface Props {
+  posts: BlogPost[]
+  translations: {
+    sectionTitle: string
+  }
+  common: {
+    viewAllPosts: string
+    readMore: string
+  }
+  locale: Locale
+  languageNames?: {
+    en: string
+    fr: string
+  }
+}
+
+const { posts, translations, common, locale, languageNames } = Astro.props
+const blogUrl = `/${locale}/blog`
+---
+
+<section class="section-padding border-t border-gray-200 dark:border-gray-800">
+  <div class="flex justify-between items-center mb-12">
+    <h2 class="section-title mb-0">{translations.sectionTitle}</h2>
+    <a
+      href={blogUrl}
+      class="font-medium flex items-center gap-2 transition-colors duration-200 group"
+    >
+      {common.viewAllPosts}
+      <svg class="w-4 h-4 transform transition-transform group-hover:translate-x-0.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+        <polyline points="12 5 19 12 12 19"></polyline>
+      </svg>
+    </a>
+  </div>
+
+  <div class="grid md:grid-cols-2 gap-8">
+    {posts.map((post) => (
+      <BlogPostCard
+        post={post}
+        locale={locale}
+        common={common}
+        languageNames={languageNames}
+      />
+    ))}
+  </div>
+</section>

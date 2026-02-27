@@ -1,0 +1,184 @@
+---
+import LocaleLayout from '@/layouts/LocaleLayout.astro'
+import TranslationBanner from '@/components/blog/TranslationBanner.astro'
+import FallbackBanner from '@/components/blog/FallbackBanner.astro'
+import TableOfContents from '@/components/blog/TableOfContents.astro'
+import { getPostBySlug, getTranslatedPost, getAllSlugsForLocale } from '@/lib/posts'
+import { getTranslations, locales, getAlternateLocale } from '@/lib/i18n'
+import { formatDate } from '@/lib/utils'
+import { SITE_NAME, SITE_URL } from '@/constants'
+import { getCollection } from 'astro:content'
+import type { Locale } from '@/types'
+
+export async function getStaticPaths() {
+  const allEntries = await getCollection('blog')
+  const paths: { params: { locale: string; slug: string } }[] = []
+
+  for (const loc of ['en', 'fr']) {
+    const slugs = new Set<string>()
+
+    // Add slugs from this locale
+    for (const entry of allEntries) {
+      if (entry.id.startsWith(`${loc}/`)) {
+        slugs.add(entry.id.replace(`${loc}/`, '').replace(/\.mdx$/, ''))
+      }
+    }
+
+    // Add fallback slugs from alternate locale
+    const altLoc = loc === 'en' ? 'fr' : 'en'
+    for (const entry of allEntries) {
+      if (entry.id.startsWith(`${altLoc}/`)) {
+        slugs.add(entry.id.replace(`${altLoc}/`, '').replace(/\.mdx$/, ''))
+      }
+    }
+
+    for (const slug of slugs) {
+      paths.push({ params: { locale: loc, slug } })
+    }
+  }
+
+  return paths
+}
+
+const { locale, slug } = Astro.params
+const validLocale = locale as Locale
+const t = getTranslations(validLocale)
+
+const result = await getPostBySlug(slug, validLocale)
+
+if (!result) {
+  return Astro.redirect('/404', 404)
+}
+
+const { post, entry } = result
+const translation = await getTranslatedPost(slug, validLocale)
+
+const { Content, headings } = await entry.render()
+const tocLabel = validLocale === 'fr' ? 'Table des mati\u00e8res' : 'Table of contents'
+
+const canonicalUrl = `${SITE_URL}/${validLocale}/blog/${post.slug}`
+const imageUrl = post.image
+  ? post.image.startsWith('http')
+    ? post.image
+    : `${SITE_URL}${post.image}`
+  : `${SITE_URL}/images/alioukahere.png`
+
+const articleSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Article',
+  headline: post.title,
+  description: post.excerpt,
+  image: imageUrl,
+  datePublished: post.publishedAt,
+  dateModified: post.updatedAt || post.publishedAt,
+  author: { '@type': 'Person', name: SITE_NAME, url: SITE_URL },
+  publisher: { '@type': 'Person', name: SITE_NAME, url: SITE_URL },
+  mainEntityOfPage: { '@type': 'WebPage', '@id': canonicalUrl },
+  url: canonicalUrl,
+  articleSection: post.category,
+}
+
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    {
+      '@type': 'ListItem',
+      position: 1,
+      name: validLocale === 'fr' ? 'Accueil' : 'Home',
+      item: `${SITE_URL}/${validLocale}`,
+    },
+    {
+      '@type': 'ListItem',
+      position: 2,
+      name: 'Blog',
+      item: `${SITE_URL}/${validLocale}/blog`,
+    },
+    {
+      '@type': 'ListItem',
+      position: 3,
+      name: post.title,
+    },
+  ],
+}
+---
+
+<LocaleLayout
+  title={`${post.title} | ${SITE_NAME}`}
+  description={post.excerpt}
+  locale={validLocale}
+  canonical={canonicalUrl}
+  ogType="article"
+  ogImage={imageUrl}
+  ogTitle={post.title}
+  ogImageAlt={post.title}
+  publishedTime={post.publishedAt}
+  modifiedTime={post.updatedAt || post.publishedAt}
+  twitterCard="summary_large_image"
+  alternates={{
+    en: `${SITE_URL}/en/blog/${post.slug}`,
+    fr: `${SITE_URL}/fr/blog/${post.slug}`,
+  }}
+>
+  <Fragment slot="default">
+    <script type="application/ld+json" set:html={JSON.stringify(articleSchema)} />
+    <script type="application/ld+json" set:html={JSON.stringify(breadcrumbSchema)} />
+
+    <div class="min-h-screen bg-white dark:bg-[#0B1120]">
+      <main class="max-w-3xl mx-auto px-4 py-16">
+        <a
+          href={`/${validLocale}/blog`}
+          class="inline-flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 mb-8 transition-colors duration-200"
+        >
+          <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+          {t.common.backToBlog}
+        </a>
+
+        {post.isFallback ? (
+          <FallbackBanner
+            contentLocale={post.locale}
+            translations={t.fallbackBanner}
+            languageNames={t.language}
+          />
+        ) : (
+          translation.exists && translation.slug && (
+            <TranslationBanner
+              currentLocale={validLocale}
+              alternateSlug={translation.slug}
+              translations={t.translationBanner}
+            />
+          )
+        )}
+
+        <header class="mb-12">
+          <div class="mb-6">
+            <span class="px-3 py-1 text-sm bg-blue-100/80 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full">
+              {post.category}
+            </span>
+          </div>
+
+          <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+            {post.title}
+          </h1>
+
+          <div class="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+            <time datetime={post.publishedAt}>
+              {formatDate(post.publishedAt, validLocale)}
+            </time>
+            <span>&bull;</span>
+            <span>{post.readingTime}</span>
+          </div>
+        </header>
+
+        <TableOfContents headings={headings} label={tocLabel} />
+
+        <article class="prose prose-lg dark:prose-invert max-w-none">
+          <Content />
+        </article>
+      </main>
+    </div>
+  </Fragment>
+</LocaleLayout>

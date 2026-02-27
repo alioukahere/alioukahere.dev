@@ -1,13 +1,4 @@
-import { MDXRemoteSerializeResult } from 'next-mdx-remote'
-
 export type Locale = 'en' | 'fr'
-
-export interface Project {
-  title: string
-  description: string
-  link: string
-  tech: string[]
-}
 
 export interface BlogPost {
   slug: string
@@ -21,14 +12,17 @@ export interface BlogPost {
   locale: Locale
   translationSlug?: string
   isFallback?: boolean
-  content:
-    | string
-    | MDXRemoteSerializeResult<Record<string, unknown>, Record<string, unknown>>
+}
+
+export interface Project {
+  title: string
+  description: string
+  link: string
+  tech: string[]
 }
 
 export interface Technology {
   name: string
-  icon: React.ComponentType<{ className?: string }>
   years: number
 }
 

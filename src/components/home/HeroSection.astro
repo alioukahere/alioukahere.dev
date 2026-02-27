@@ -1,0 +1,27 @@
+---
+interface Props {
+  translations: {
+    greeting: string
+    description: string
+  }
+  common: {
+    getInTouch: string
+  }
+}
+
+const { translations, common } = Astro.props
+---
+
+<section class="section-padding">
+  <div class="max-w-3xl">
+    <h1 class="text-4xl md:text-5xl font-bold mb-6 leading-tight">
+      {translations.greeting} <span role="img" aria-label="wave">&#128075;</span>
+    </h1>
+    <p class="text-xl md:text-2xl text-gray-600 dark:text-gray-300 leading-relaxed mb-8">
+      {translations.description}
+    </p>
+    <a href="mailto:hello@alioukahere.dev" class="btn">
+      {common.getInTouch}
+    </a>
+  </div>
+</section>

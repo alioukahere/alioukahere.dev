@@ -1,0 +1,53 @@
+---
+import LocaleLayout from '@/layouts/LocaleLayout.astro'
+import BlogPostCard from '@/components/blog/BlogPostCard.astro'
+import { getAllPosts } from '@/lib/posts'
+import { getTranslations, isValidLocale } from '@/lib/i18n'
+import { SITE_NAME, SITE_URL } from '@/constants'
+import type { Locale } from '@/types'
+
+export function getStaticPaths() {
+  return [{ params: { locale: 'en' } }, { params: { locale: 'fr' } }]
+}
+
+const { locale } = Astro.params
+
+if (!isValidLocale(locale)) {
+  return Astro.redirect('/en/blog', 302)
+}
+
+const validLocale = locale as Locale
+const t = getTranslations(validLocale)
+const posts = await getAllPosts(validLocale)
+---
+
+<LocaleLayout
+  title={t.blog.metaTitle}
+  description={t.blog.metaDescription}
+  locale={validLocale}
+  canonical={`${SITE_URL}/${validLocale}/blog`}
+  twitterCard="summary"
+  alternates={{ en: `${SITE_URL}/en/blog`, fr: `${SITE_URL}/fr/blog` }}
+>
+  <main class="max-w-6xl mx-auto px-4 py-16">
+    <div class="max-w-3xl mb-16">
+      <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-6">
+        {t.blog.title}
+      </h1>
+      <p class="text-xl text-gray-600 dark:text-gray-300 leading-relaxed">
+        {t.blog.description}
+      </p>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-8">
+      {posts.map((post) => (
+        <BlogPostCard
+          post={post}
+          locale={validLocale}
+          common={t.common}
+          languageNames={t.language}
+        />
+      ))}
+    </div>
+  </main>
+</LocaleLayout>

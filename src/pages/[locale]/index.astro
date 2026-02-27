@@ -1,0 +1,48 @@
+---
+import LocaleLayout from '@/layouts/LocaleLayout.astro'
+import HeroSection from '@/components/home/HeroSection.astro'
+import ServicesSection from '@/components/home/ServicesSection.astro'
+import ProjectsSection from '@/components/home/ProjectsSection.astro'
+import BlogSection from '@/components/home/BlogSection.astro'
+import TechnologiesSection from '@/components/home/TechnologiesSection.astro'
+import { getAllPosts } from '@/lib/posts'
+import { getTranslations, locales, isValidLocale } from '@/lib/i18n'
+import { SITE_NAME, SITE_URL } from '@/constants'
+import type { Locale } from '@/types'
+
+export function getStaticPaths() {
+  return [{ params: { locale: 'en' } }, { params: { locale: 'fr' } }]
+}
+
+const { locale } = Astro.params
+
+if (!isValidLocale(locale)) {
+  return Astro.redirect('/en', 302)
+}
+
+const validLocale = locale as Locale
+const t = getTranslations(validLocale)
+const posts = await getAllPosts(validLocale)
+---
+
+<LocaleLayout
+  title={`${SITE_NAME} | Full Stack Developer - PHP, Python, React`}
+  description={t.hero.description}
+  locale={validLocale}
+  canonical={`${SITE_URL}/${validLocale}`}
+  alternates={{ en: `${SITE_URL}/en`, fr: `${SITE_URL}/fr` }}
+>
+  <main class="max-w-6xl mx-auto px-4">
+    <HeroSection translations={t.hero} common={t.common} />
+    <ServicesSection translations={t.services} />
+    <ProjectsSection translations={t.projects} common={t.common} />
+    <BlogSection
+      posts={posts.slice(0, 4)}
+      translations={t.blog}
+      common={t.common}
+      locale={validLocale}
+      languageNames={t.language}
+    />
+    <TechnologiesSection translations={t.technologies} common={t.common} />
+  </main>
+</LocaleLayout>

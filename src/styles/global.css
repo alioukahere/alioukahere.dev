@@ -1,0 +1,84 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply text-gray-700 dark:text-gray-200 leading-relaxed;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-sans font-bold text-gray-900 dark:text-white leading-tight;
+  }
+
+  p {
+    @apply text-gray-700 dark:text-gray-300 leading-relaxed mb-6;
+  }
+
+  a:not(.btn) {
+    @apply text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors duration-200;
+  }
+
+  .btn {
+    @apply inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors duration-200;
+  }
+}
+
+@layer components {
+  .section-padding {
+    @apply py-16 md:py-24;
+  }
+
+  .content-container {
+    @apply max-w-6xl mx-auto px-4;
+  }
+
+  .section-title {
+    @apply text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-8;
+  }
+
+  .section-description {
+    @apply text-lg text-gray-600 dark:text-gray-300 mb-12 leading-relaxed;
+  }
+}
+
+.prose pre {
+  background-color: #1E1E2E !important;
+  color: rgb(229, 231, 235) !important;
+  overflow-x: auto !important;
+  white-space: pre !important;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  font-size: 0.875rem;
+  line-height: 1.7142857;
+}
+
+.prose pre code {
+  background-color: transparent !important;
+  border: none !important;
+  font-weight: 400 !important;
+  color: inherit !important;
+  font-size: inherit !important;
+  font-family: inherit !important;
+  line-height: inherit !important;
+  white-space: pre !important;
+  word-break: normal !important;
+  overflow-wrap: normal !important;
+  counter-reset: line;
+}
+
+.prose pre code .line::before {
+  counter-increment: line;
+  content: counter(line);
+  display: inline-block;
+  width: 2rem;
+  margin-right: 1rem;
+  text-align: right;
+  color: rgba(115, 138, 148, 0.4);
+  user-select: none;
+}

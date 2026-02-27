@@ -1,0 +1,28 @@
+---
+import BaseLayout from './BaseLayout.astro'
+import Header from '@/components/layout/Header.astro'
+import Footer from '@/components/layout/Footer.astro'
+import type { Locale } from '@/types'
+
+interface Props {
+  title: string
+  description: string
+  locale: Locale
+  canonical?: string
+  ogType?: string
+  ogImage?: string
+  ogTitle?: string
+  publishedTime?: string
+  modifiedTime?: string
+  twitterCard?: 'summary' | 'summary_large_image'
+  alternates?: { en?: string; fr?: string }
+}
+
+const props = Astro.props
+---
+
+<BaseLayout {...props}>
+  <Header locale={props.locale} />
+  <slot />
+  <Footer locale={props.locale} />
+</BaseLayout>
