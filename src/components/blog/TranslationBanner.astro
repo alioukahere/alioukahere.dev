@@ -1,0 +1,26 @@
+---
+import { getAlternateLocale } from '@/lib/i18n'
+import type { Locale } from '@/types'
+
+interface Props {
+  currentLocale: Locale
+  alternateSlug: string
+  translations: {
+    message: string
+    language: string
+  }
+}
+
+const { currentLocale, alternateSlug, translations } = Astro.props
+const alternateLocale = getAlternateLocale(currentLocale)
+const alternateUrl = `/${alternateLocale}/blog/${alternateSlug}`
+---
+
+<div class="mb-8 p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
+  <span class="dark:text-white">
+    &#127757; {translations.message}{' '}
+    <a href={alternateUrl} class="font-semibold underline hover:no-underline">
+      {translations.language}
+    </a>
+  </span>
+</div>

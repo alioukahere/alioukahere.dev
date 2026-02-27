@@ -5,47 +5,64 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ```bash
-npm run dev      # Start development server with Turbopack
-npm run build    # Production build
-npm run start    # Start production server
-npm run lint     # Run ESLint
+npm run dev      # Start Astro development server
+npm run build    # Production build (static output to dist/)
+npm run preview  # Preview production build locally
 ```
 
 ## Architecture
 
-This is a personal portfolio and blog site built with Next.js 15 (App Router) and React 19.
+This is a personal portfolio and blog site built with Astro (static output, zero JS by default).
 
 ### Key Directories
 
-- `src/app/` - Next.js App Router pages and layouts
-- `src/components/` - React components organized by feature (home/, blog/, layout/)
-- `src/lib/` - Utility functions (mdx.ts for blog post processing, utils.ts for helpers)
-- `content/blog/` - MDX blog posts with frontmatter
+- `src/pages/` - Astro file-based routing (includes [locale] dynamic segments)
+- `src/layouts/` - BaseLayout.astro (root HTML + SEO) and LocaleLayout.astro (Header/Footer wrapper)
+- `src/components/` - Astro components organized by feature (home/, blog/, layout/)
+- `src/lib/` - Utility functions (posts.ts for content collections, i18n.ts, utils.ts)
+- `src/content/blog/{en,fr}/` - MDX blog posts (Content Collections)
+- `src/content/config.ts` - Zod schema for blog frontmatter
+- `src/styles/global.css` - Tailwind CSS with custom utilities
 
 ### Blog System
 
-Blog posts are MDX files in `content/blog/`. The frontmatter schema:
+Blog posts are MDX files in `src/content/blog/{en,fr}/`. The frontmatter schema:
 
 ```yaml
 title: string
 publishedAt: string (YYYY-MM-DD)
+updatedAt: string (optional)
 excerpt: string
 category: string
+image: string (optional)
+translationSlug: string (optional)
 ```
 
-Posts are processed by `src/lib/mdx.ts` which extracts frontmatter with gray-matter and calculates reading time. MDX is compiled at runtime using next-mdx-remote/rsc with custom components defined in `src/app/blog/[slug]/page.tsx`.
+Posts are processed via Astro Content Collections (`src/lib/posts.ts`) with type-safe Zod validation. MDX is compiled at build time with Shiki syntax highlighting (one-dark-pro theme) and remark-gfm.
+
+### i18n
+
+Route-based: `/en/*` and `/fr/*`. Translations in `src/i18n/{en,fr}.json`. Language switcher uses plain `<a>` links (no JS). Fallback system shows posts from alternate locale with banner.
 
 ### Styling
 
 - Tailwind CSS with class-based dark mode (`darkMode: 'class'`)
-- Custom CSS variables for colors (--background, --foreground)
-- Typography plugin for prose styling
-- Fonts: Inter (sans) and JetBrains Mono (mono) via next/font
+- Typography plugin for prose styling with custom inline code colors
+- Fonts: Inter + JetBrains Mono Variable via @fontsource (self-hosted)
+- Dark mode toggle uses vanilla JS (~200 bytes inline)
+
+### SEO
+
+- Full meta tags (title, description, canonical, hreflang, OG, Twitter) via BaseLayout props
+- JSON-LD: PersonSchema (all pages), ArticleSchema + BreadcrumbSchema (blog posts)
+- Sitemap via @astrojs/sitemap
+- RSS feeds: /rss-en.xml and /rss-fr.xml
+- robots.txt blocks GPTBot
 
 ### Types
 
-Core interfaces are in `src/types.ts`: BlogPost, Project, Technology, Service.
+Core interfaces in `src/types.ts`: BlogPost, Project, Technology, Service, Locale.
 
 ### Constants
 
-Site metadata (URL, name, social links) is centralized in `src/constants.ts`.
+Site metadata (URL, name, social links) in `src/constants.ts`.

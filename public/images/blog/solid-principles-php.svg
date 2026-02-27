@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 480" fill="none">
+  <style>
+    .box { fill: #1e293b; stroke: #3b82f6; stroke-width: 2; rx: 8; }
+    .letter { fill: #3b82f6; font-family: system-ui, sans-serif; font-size: 28px; font-weight: 800; }
+    .title { fill: #f8fafc; font-family: system-ui, sans-serif; font-size: 14px; font-weight: 600; }
+    .subtitle { fill: #94a3b8; font-family: system-ui, sans-serif; font-size: 11px; }
+    .header-box { fill: #1e293b; stroke: #3b82f6; stroke-width: 2.5; rx: 10; }
+    .header-title { fill: #f8fafc; font-family: system-ui, sans-serif; font-size: 18px; font-weight: 700; }
+    .header-sub { fill: #60a5fa; font-family: system-ui, sans-serif; font-size: 12px; font-weight: 500; }
+    .connector { stroke: #334155; stroke-width: 1.5; stroke-dasharray: 4 3; }
+    .dot { fill: #3b82f6; }
+    .letter-bg { fill: #0f172a; rx: 6; }
+  </style>
+
+  <!-- Header -->
+  <rect class="header-box" x="20" y="16" width="480" height="56"/>
+  <text class="header-title" x="260" y="42" text-anchor="middle">SOLID Principles</text>
+  <text class="header-sub" x="260" y="59" text-anchor="middle">Clean Architecture in PHP</text>
+
+  <!-- Dashed vertical connector line -->
+  <line class="connector" x1="56" y1="92" x2="56" y2="460"/>
+
+  <!-- S — Single Responsibility -->
+  <rect class="letter-bg" x="30" y="92" width="52" height="52"/>
+  <rect class="box" x="30" y="92" width="52" height="52" style="fill:#0f172a;"/>
+  <text class="letter" x="56" y="127" text-anchor="middle">S</text>
+  <rect class="box" x="102" y="92" width="398" height="52"/>
+  <text class="title" x="118" y="114">Single Responsibility Principle</text>
+  <text class="subtitle" x="118" y="132">A class should have only one reason to change</text>
+
+  <!-- O — Open/Closed -->
+  <rect class="box" x="30" y="164" width="52" height="52" style="fill:#0f172a;"/>
+  <text class="letter" x="56" y="199" text-anchor="middle">O</text>
+  <rect class="box" x="102" y="164" width="398" height="52"/>
+  <text class="title" x="118" y="186">Open / Closed Principle</text>
+  <text class="subtitle" x="118" y="204">Open for extension, closed for modification</text>
+
+  <!-- L — Liskov Substitution -->
+  <rect class="box" x="30" y="236" width="52" height="52" style="fill:#0f172a;"/>
+  <text class="letter" x="56" y="271" text-anchor="middle">L</text>
+  <rect class="box" x="102" y="236" width="398" height="52"/>
+  <text class="title" x="118" y="258">Liskov Substitution Principle</text>
+  <text class="subtitle" x="118" y="276">Subtypes must be substitutable for their base types</text>
+
+  <!-- I — Interface Segregation -->
+  <rect class="box" x="30" y="308" width="52" height="52" style="fill:#0f172a;"/>
+  <text class="letter" x="56" y="343" text-anchor="middle">I</text>
+  <rect class="box" x="102" y="308" width="398" height="52"/>
+  <text class="title" x="118" y="330">Interface Segregation Principle</text>
+  <text class="subtitle" x="118" y="348">Many specific interfaces over one general-purpose</text>
+
+  <!-- D — Dependency Inversion -->
+  <rect class="box" x="30" y="380" width="52" height="52" style="fill:#0f172a;"/>
+  <text class="letter" x="56" y="415" text-anchor="middle">D</text>
+  <rect class="box" x="102" y="380" width="398" height="52"/>
+  <text class="title" x="118" y="402">Dependency Inversion Principle</text>
+  <text class="subtitle" x="118" y="420">Depend on abstractions, not on concretions</text>
+
+  <!-- Decorative dots on the connector line -->
+  <circle class="dot" cx="56" cy="118" r="3.5" style="fill:#0f172a; stroke:#3b82f6; stroke-width:1.5;"/>
+  <circle class="dot" cx="56" cy="190" r="3.5" style="fill:#0f172a; stroke:#3b82f6; stroke-width:1.5;"/>
+  <circle class="dot" cx="56" cy="262" r="3.5" style="fill:#0f172a; stroke:#3b82f6; stroke-width:1.5;"/>
+  <circle class="dot" cx="56" cy="334" r="3.5" style="fill:#0f172a; stroke:#3b82f6; stroke-width:1.5;"/>
+  <circle class="dot" cx="56" cy="406" r="3.5" style="fill:#0f172a; stroke:#3b82f6; stroke-width:1.5;"/>
+
+  <!-- Footer accent line -->
+  <rect x="20" y="456" width="480" height="3" rx="1.5" fill="#3b82f6" opacity="0.3"/>
+</svg>
